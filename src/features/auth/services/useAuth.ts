@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/shared/lib/supabase'
 import { authKeys } from './authKeys'
+import type { AuthzPayload } from '../types/auth.types'
 import type { LoginDTO, RegisterDTO } from '../utils/authSchema'
 
 export function useLogin() {
@@ -41,18 +42,6 @@ export function useRegister() {
 
       if (authError) throw authError
 
-      // 2. Criar registro na tabela custom usuarios
-      if (authData.user) {
-        const { error: userError } = await supabase.from('usuarios').insert({
-          id: authData.user.id,
-          email,
-          nome_completo,
-          cpf,
-        })
-
-        if (userError) throw userError
-      }
-
       return authData
     },
     onSuccess: () => {
@@ -85,6 +74,21 @@ export function useSession() {
   })
 }
 
+export function useCurrentUserAuthz(enabled: boolean) {
+  return useQuery({
+    queryKey: authKeys.authz(),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_current_user_authz')
+
+      if (error) throw error
+
+      return data as AuthzPayload
+    },
+    enabled,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
 export function useAuthStateSubscription() {
   const queryClient = useQueryClient()
 
@@ -93,6 +97,7 @@ export function useAuthStateSubscription() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       queryClient.setQueryData(authKeys.session(), session)
+      queryClient.invalidateQueries({ queryKey: authKeys.authz() })
     })
 
     return () => subscription.unsubscribe()

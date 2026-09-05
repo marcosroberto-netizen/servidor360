@@ -3,6 +3,7 @@
 // Hooks
 export {
   useAuthStateSubscription,
+  useCurrentUserAuthz,
   useLogin,
   useRegister,
   useLogout,
@@ -31,7 +32,7 @@ export {
 export type { Permission as AuthPermission } from './hooks/usePermission'
 
 // Tipos
-export type { User, Permission, PermissionString } from './types/auth.types'
+export type { AuthzPayload, User, PermissionString } from './types/auth.types'
 
 // Schemas
 export type { LoginDTO, RegisterDTO, ResetPasswordDTO, UpdatePasswordDTO } from './utils/authSchema'

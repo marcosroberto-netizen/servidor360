@@ -1,4 +1,5 @@
 import { useAuthStore } from '../store/authStore'
+import type { PermissionString } from '../types/auth.types'
 
 export const PERMISSIONS = {
   SERVIDORES_READ: 'servidores:read',
@@ -17,30 +18,29 @@ export const PERMISSIONS = {
 
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS]
 
-function hasPermission(perfis: string[], permission: Permission): boolean {
+function hasPermission(perfis: string[], permissoes: PermissionString[], permission: Permission): boolean {
   if (perfis.includes('administrador')) return true
+  if (permissoes.includes(PERMISSIONS.ADMIN)) return true
 
-  void permission
-
-  return false
+  return permissoes.includes(permission)
 }
 
 export function usePermission(permission?: Permission): boolean {
-  const { perfis } = useAuthStore()
+  const { perfis, permissoes } = useAuthStore()
 
   if (!permission) return true
 
-  return hasPermission(perfis, permission)
+  return hasPermission(perfis, permissoes, permission)
 }
 
 export function useAnyPermission(permissions: Permission[]): boolean {
-  const { perfis } = useAuthStore()
+  const { perfis, permissoes } = useAuthStore()
 
-  return permissions.some((permission) => hasPermission(perfis, permission))
+  return permissions.some((permission) => hasPermission(perfis, permissoes, permission))
 }
 
 export function useAllPermissions(permissions: Permission[]): boolean {
-  const { perfis } = useAuthStore()
+  const { perfis, permissoes } = useAuthStore()
 
-  return permissions.every((permission) => hasPermission(perfis, permission))
+  return permissions.every((permission) => hasPermission(perfis, permissoes, permission))
 }

@@ -3,15 +3,16 @@ export interface User {
   email: string
   nome_completo?: string
   cpf?: string
-  perfis?: string[]
-  unidades?: string[]
+  ativo?: boolean
   created_at: string
   updated_at: string
 }
 
-export interface Permission {
-  resource: string
-  action: string
+export interface AuthzPayload {
+  usuario: User | null
+  perfis: string[]
+  permissoes: PermissionString[]
+  unidades: string[]
 }
 
-export type PermissionString = `${string}:${string}`
+export type PermissionString = '*' | `${string}:${string}`

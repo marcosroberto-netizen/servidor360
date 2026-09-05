@@ -1,13 +1,15 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { User } from '../types/auth.types'
+import type { PermissionString, User } from '../types/auth.types'
 
 interface AuthStoreState {
   user: User | null
   perfis: string[]
+  permissoes: PermissionString[]
   unidades: string[]
   setUser: (user: User | null) => void
   setPerfis: (perfis: string[]) => void
+  setPermissoes: (permissoes: PermissionString[]) => void
   setUnidades: (unidades: string[]) => void
   reset: () => void
 }
@@ -15,6 +17,7 @@ interface AuthStoreState {
 const initialState = {
   user: null,
   perfis: [],
+  permissoes: [],
   unidades: [],
 }
 
@@ -30,6 +33,9 @@ export const useAuthStore = create<AuthStoreState>()(
         setPerfis: (perfis) =>
           set({ perfis }, false, 'auth/setPerfis'),
 
+        setPermissoes: (permissoes) =>
+          set({ permissoes }, false, 'auth/setPermissoes'),
+
         setUnidades: (unidades) =>
           set({ unidades }, false, 'auth/setUnidades'),
 
@@ -41,6 +47,7 @@ export const useAuthStore = create<AuthStoreState>()(
         partialize: (state) => ({
           user: state.user,
           perfis: state.perfis,
+          permissoes: state.permissoes,
           unidades: state.unidades,
         }),
       }
