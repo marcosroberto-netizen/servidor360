@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { FeedbackDialog } from '@/shared/components/ui/FeedbackDialog'
 import { useAuth } from '../hooks/authContext'
 import { usePermission, type Permission } from '../hooks/usePermission'
 
@@ -14,12 +15,12 @@ export function ProtectedRoute({ children, permission, fallback }: ProtectedRout
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600" />
-          <p className="mt-4 text-gray-600">Carregando...</p>
-        </div>
-      </div>
+      <FeedbackDialog
+        open
+        title="Validando acesso"
+        description="Estamos conferindo sua sessão e permissões."
+        variant="loading"
+      />
     )
   }
 

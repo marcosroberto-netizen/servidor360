@@ -1,4 +1,5 @@
 import { Can, PERMISSIONS, useAuth, useLogout } from '@/features/auth'
+import { FeedbackDialog } from '@/shared/components/ui/FeedbackDialog'
 
 export default function PortalPage() {
   const { user } = useAuth()
@@ -10,6 +11,13 @@ export default function PortalPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <FeedbackDialog
+        open={isLoggingOut}
+        title="Saindo"
+        description="Estamos encerrando sua sessão."
+        variant="loading"
+      />
+
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -27,7 +35,7 @@ export default function PortalPage() {
                 disabled={isLoggingOut}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
               >
-                {isLoggingOut ? 'Saindo...' : 'Sair'}
+                Sair
               </button>
             </div>
           </div>
