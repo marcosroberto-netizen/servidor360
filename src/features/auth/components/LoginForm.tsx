@@ -45,7 +45,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <main className="min-h-screen bg-slate-100 text-slate-900">
       <FeedbackDialog
         actionLabel="Entendi"
         description={
@@ -65,64 +65,114 @@ export function LoginForm() {
         variant="loading"
       />
 
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Servidor 360
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Portal do Servidor
-          </p>
+      <section className="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 lg:grid-cols-[1.12fr_0.88fr]">
+        <div className="flex min-h-[42vh] flex-col justify-between bg-slate-950 px-6 py-8 text-white sm:px-10 lg:min-h-screen lg:px-12">
+          <header className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white text-sm font-black text-slate-950">
+                S360
+              </div>
+              <div>
+                <p className="text-base font-semibold leading-tight">Servidor 360</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-blue-200">Portal do Servidor</p>
+              </div>
+            </div>
+            <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-medium text-slate-200">
+              Acesso seguro
+            </span>
+          </header>
+
+          <div className="py-10 lg:py-0">
+            <p className="mb-4 text-sm font-medium uppercase tracking-[0.22em] text-blue-200">
+              Gestão funcional integrada
+            </p>
+            <h1 className="max-w-2xl text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+              Um portal para acompanhar a vida funcional do servidor.
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
+              Acesse serviços, documentos, afastamentos e prontuário funcional com permissões
+              adequadas ao seu perfil.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">RBAC</p>
+              <p className="mt-1 text-sm text-slate-300">Permissões por perfil</p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">RLS</p>
+              <p className="mt-1 text-sm text-slate-300">Proteção no banco</p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">360</p>
+              <p className="mt-1 text-sm text-slate-300">Visão unificada</p>
+            </div>
+          </div>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                E-mail
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={Boolean(errors.email)}
-                {...register('email')}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+        <div className="flex items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
+          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-medium sm:p-8">
+            <div className="mb-8">
+              <p className="text-sm font-medium text-blue-700">Entrar no portal</p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-950">Bem-vindo de volta</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Use suas credenciais institucionais para acessar sua área.
+              </p>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Senha
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                aria-invalid={Boolean(errors.password)}
-                {...register('password')}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                  E-mail
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                  {...register('email')}
+                  className="mt-2 block h-12 w-full rounded-md border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 aria-[invalid=true]:border-red-400 aria-[invalid=true]:ring-4 aria-[invalid=true]:ring-red-50"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                    Senha
+                  </label>
+                  <a href="/forgot-password" className="text-sm font-medium text-blue-700 hover:text-blue-800">
+                    Esqueci minha senha
+                  </a>
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  {...register('password')}
+                  className="mt-2 block h-12 w-full rounded-md border border-slate-300 bg-white px-4 text-base text-slate-950 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 aria-[invalid=true]:border-red-400 aria-[invalid=true]:ring-4 aria-[invalid=true]:ring-red-50"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || isPending}
+                className="flex h-12 w-full items-center justify-center rounded-md bg-blue-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Entrar
+              </button>
+            </form>
+
+            <div className="mt-8 border-t border-slate-200 pt-5">
+              <p className="text-xs leading-5 text-slate-500">
+                O acesso é pessoal e auditável. Ao entrar, suas permissões serão aplicadas
+                automaticamente conforme o perfil cadastrado.
+              </p>
             </div>
           </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={isSubmitting || isPending}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Entrar
-            </button>
-          </div>
-
-          <div className="text-center">
-            <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
-              Esqueceu sua senha?
-            </a>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   )
 }
