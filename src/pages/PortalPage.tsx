@@ -55,23 +55,62 @@ export default function PortalPage() {
 
         {/* Cards de Acesso */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Atestados */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center mb-4">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+          <Can permission={PERMISSIONS.DOCUMENTOS_READ}>
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="ml-4 text-lg font-semibold text-gray-900">Documentos</h3>
               </div>
-              <h3 className="ml-4 text-lg font-semibold text-gray-900">Atestados</h3>
+              <p className="text-gray-600 mb-4">
+                Consulte documentos funcionais permitidos para seu perfil.
+              </p>
+              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                Acessar Documentos
+              </button>
             </div>
-            <p className="text-gray-600 mb-4">
-              Acesse seus atestados médicos e documentos funcionais.
-            </p>
-            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-              Acessar Atestados
-            </button>
-          </div>
+          </Can>
+
+          <Can permission={PERMISSIONS.AFASTAMENTOS_CREATE}>
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-cyan-100 rounded-full">
+                  <svg className="w-6 h-6 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4 6 3v15M9 9h1m-1 4h1m4-4h1m-1 4h1M9 21v-4h6v4" />
+                  </svg>
+                </div>
+                <h3 className="ml-4 text-lg font-semibold text-gray-900">Gestão Escolar</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Registre afastamentos, responda pendências e acompanhe sua unidade.
+              </p>
+              <button className="w-full px-4 py-2 bg-cyan-700 text-white rounded-md hover:bg-cyan-800 transition-colors">
+                Acessar Unidade
+              </button>
+            </div>
+          </Can>
+
+          <Can permission={PERMISSIONS.EDUCACAO_READ}>
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-indigo-100 rounded-full">
+                  <svg className="w-6 h-6 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422A12.083 12.083 0 0118 13.5C18 16.538 15.314 19 12 19s-6-2.462-6-5.5c0-.99-.06-1.97-.16-2.922L12 14z" />
+                  </svg>
+                </div>
+                <h3 className="ml-4 text-lg font-semibold text-gray-900">Educação</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Acompanhe processos, servidores da rede e indicadores gerenciais.
+              </p>
+              <button className="w-full px-4 py-2 bg-indigo-700 text-white rounded-md hover:bg-indigo-800 transition-colors">
+                Acessar Educação
+              </button>
+            </div>
+          </Can>
 
           {/* Afastamentos */}
           <Can permission={PERMISSIONS.AFASTAMENTOS_READ}>
@@ -114,7 +153,7 @@ export default function PortalPage() {
           </Can>
 
           {/* CAS */}
-          <Can permission={PERMISSIONS.CAS_READ}>
+          <Can permission={PERMISSIONS.CAS_FILA}>
             <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-orange-100 rounded-full">
@@ -125,10 +164,29 @@ export default function PortalPage() {
                 <h3 className="ml-4 text-lg font-semibold text-gray-900">CAS</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Controle e Avaliação Social.
+                Acesse fila de análise, complementações e encaminhamentos.
               </p>
               <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
                 Acessar CAS
+              </button>
+            </div>
+          </Can>
+
+          <Can permission={PERMISSIONS.RH_FILA}>
+            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-slate-100 rounded-full">
+                  <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h6M9 7h.01M5 7h.01M5 12h.01M5 17h.01M9 12h.01M13 7h6M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                  </svg>
+                </div>
+                <h3 className="ml-4 text-lg font-semibold text-gray-900">RH</h3>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Registre providências administrativas e conclua etapas do processo.
+              </p>
+              <button className="w-full px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 transition-colors">
+                Acessar RH
               </button>
             </div>
           </Can>

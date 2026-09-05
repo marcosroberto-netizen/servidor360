@@ -13,7 +13,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { data: session = null, isLoading } = useSession()
   const { data: authz, isLoading: isLoadingAuthz } = useCurrentUserAuthz(Boolean(session))
   const { mutateAsync: logout } = useLogout()
-  const { reset, setPerfis, setPermissoes, setUnidades, setUser } = useAuthStore()
+  const { reset, setPerfis, setPermissoes, setSetores, setUnidades, setUser } = useAuthStore()
 
   useEffect(() => {
     if (!session) {
@@ -27,7 +27,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setPerfis(authz.perfis)
     setPermissoes(authz.permissoes)
     setUnidades(authz.unidades)
-  }, [authz, reset, session, setPerfis, setPermissoes, setUnidades, setUser])
+    setSetores(authz.setores ?? [])
+  }, [authz, reset, session, setPerfis, setPermissoes, setSetores, setUnidades, setUser])
 
   const signOut = async () => {
     await logout()

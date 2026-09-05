@@ -13,6 +13,7 @@ export interface AuthzPayload {
   perfis: string[]
   permissoes: PermissionString[]
   unidades: string[]
+  setores?: string[]
 }
 
 export type PermissionString = '*' | `${string}:${string}`
