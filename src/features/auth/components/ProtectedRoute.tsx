@@ -1,13 +1,8 @@
 import { Navigate } from 'react-router-dom'
 import { FeedbackDialog } from '@/shared/components/ui/FeedbackDialog'
 import { useAuth } from '../hooks/authContext'
-import { usePermission, type Permission } from '../hooks/usePermission'
-
-interface ProtectedRouteProps {
-  children: React.ReactNode
-  permission?: Permission
-  fallback?: React.ReactNode
-}
+import { usePermission } from '../hooks/usePermission'
+import type { ProtectedRouteProps } from '../types/auth.types'
 
 export function ProtectedRoute({ children, permission, fallback }: ProtectedRouteProps) {
   const { user, loading } = useAuth()

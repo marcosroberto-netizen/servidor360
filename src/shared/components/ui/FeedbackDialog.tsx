@@ -32,7 +32,7 @@ export function FeedbackDialog({
   title,
   description,
   variant = 'info',
-  actionLabel = 'OK',
+  actionLabel = 'Entendi',
   onClose,
 }: FeedbackDialogProps) {
   if (!open) return null

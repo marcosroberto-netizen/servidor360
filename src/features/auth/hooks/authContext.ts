@@ -1,12 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
-
-export interface AuthContextType {
-  user: SupabaseUser | null
-  session: Session | null
-  loading: boolean
-  signOut: () => Promise<void>
-}
+import type { AuthContextType } from '../types/auth.types'
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -14,7 +7,7 @@ export function useAuth() {
   const context = useContext(AuthContext)
 
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider')
   }
 
   return context

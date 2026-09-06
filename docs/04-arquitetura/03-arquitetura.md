@@ -164,6 +164,26 @@ import { useAuthStore } from '@/features/auth'
 
 ## 6. Integração com Supabase
 
+### 6.0 Organização de Schemas do Banco
+
+O banco deve ser organizado por módulo funcional. Novas tabelas não devem ser criadas automaticamente em `public`.
+
+| Schema | Responsabilidade | Exemplos |
+|---|---|---|
+| `app_auth` | Autenticação complementar, autorização, perfis, permissões e vínculos de usuário | `usuarios`, `perfis`, `permissoes`, `usuario_perfis`, `usuario_unidades`, `usuario_setores`, `perfil_permissoes` |
+| `public` | Extensões, funções/fachadas públicas consumidas pelo Supabase Client e dados verdadeiramente compartilhados | `get_current_user_authz()`, `current_user_has_permission()` |
+| `servidores` | Cadastro funcional dos servidores | `servidores`, `prontuarios` |
+| `afastamentos` | Processos, documentos, tramitações e devolutivas do módulo de afastamentos | `afastamentos`, `movimentacoes`, `devolutivas`, `documentos` |
+
+Regras obrigatórias:
+
+- Cada módulo deve ter seu próprio schema.
+- Relações entre módulos devem usar chaves estrangeiras qualificadas com schema.
+- Funções RPC chamadas pelo frontend devem permanecer em `public` como fachada estável.
+- Funções internas devem qualificar tabelas pelo schema ou definir `search_path` explicitamente.
+- RLS deve ser aplicada nas tabelas do schema dono dos dados.
+- O schema `auth` nativo do Supabase, que contém objetos como `auth.users`, não deve receber tabelas próprias do sistema. Use `app_auth` para o RBAC da aplicação.
+
 ### 6.1 Configuração do Cliente Supabase
 
 ```ts
@@ -242,8 +262,9 @@ export function useServidores(filters?: ServidorFilters) {
     queryKey: servidorKeys.list(filters),
     queryFn: async () => {
       let query = supabase
+        .schema('servidores')
         .from('servidores')
-        .select('*, unidades(id, nome), perfis(id, nome)')
+        .select('*')
 
       if (filters?.search) {
         query = query.ilike('nome', `%${filters.search}%`)
@@ -265,8 +286,9 @@ export function useServidor(id: string) {
     queryKey: servidorKeys.detail(id),
     queryFn: async () => {
       const { data, error } = await supabase
+        .schema('servidores')
         .from('servidores')
-        .select('*, unidades(*), perfis(*)')
+        .select('*')
         .eq('id', id)
         .single()
 
@@ -292,6 +314,7 @@ export function useCreateServidor() {
   return useMutation({
     mutationFn: async (data: CreateServidorDTO) => {
       const { data: result, error } = await supabase
+        .schema('servidores')
         .from('servidores')
         .insert(data)
         .select()
@@ -312,6 +335,7 @@ export function useUpdateServidor() {
   return useMutation({
     mutationFn: async ({ id, data }: UpdateServidorDTO) => {
       const { data: result, error } = await supabase
+        .schema('servidores')
         .from('servidores')
         .update(data)
         .eq('id', id)
@@ -348,7 +372,7 @@ export function useServidorRealtime(id: string) {
         'postgres_changes',
         {
           event: '*',
-          schema: 'public',
+          schema: 'servidores',
           table: 'servidores',
           filter: `id=eq.${id}`,
         },

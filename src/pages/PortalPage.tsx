@@ -1,9 +1,20 @@
-import { Can, PERMISSIONS, useAuth, useLogout } from '@/features/auth'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useDevolutivaAlerts } from '@/features/afastamentos'
+import { Can, PERMISSIONS, useAuth, useCurrentUserAuthz, useLogout } from '@/features/auth'
 import { FeedbackDialog } from '@/shared/components/ui/FeedbackDialog'
 
 export default function PortalPage() {
-  const { user } = useAuth()
+  const [showDevolutivas, setShowDevolutivas] = useState(false)
+  const { session, user } = useAuth()
   const { mutate: logout, isPending: isLoggingOut } = useLogout()
+  const { data: authz } = useCurrentUserAuthz(Boolean(session))
+  const canReadDevolutivas =
+    authz?.permissoes.includes(PERMISSIONS.ADMIN) ||
+    authz?.permissoes.includes(PERMISSIONS.AFASTAMENTOS_LER_DEVOLUTIVA)
+  const { data: devolutivaAlerts = [] } = useDevolutivaAlerts(Boolean(canReadDevolutivas))
+  const isGestorEscolar =
+    authz?.perfis.includes('gestor_escolar') && !authz?.perfis.includes('administrador')
 
   const handleLogout = () => {
     logout()
@@ -18,6 +29,60 @@ export default function PortalPage() {
         variant="loading"
       />
 
+      {showDevolutivas && (
+        <div
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4"
+          role="dialog"
+        >
+          <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-strong">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-950">Devolutivas</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {devolutivaAlerts.length > 0
+                    ? `${devolutivaAlerts.length} mensagem(ns) aguardando atencao.`
+                    : 'Nenhuma mensagem pendente no momento.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDevolutivas(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100"
+                aria-label="Fechar devolutivas"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {devolutivaAlerts.length > 0 ? (
+              <div className="mt-4 grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
+                {devolutivaAlerts.map((alert) => (
+                  <article key={alert.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-semibold text-slate-950">{alert.servidorNome}</h3>
+                        <p className="mt-1 text-xs font-medium text-slate-500">{alert.protocolo}</p>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+                        {alert.status === 'nova' ? 'Nova' : 'Pendente'}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-5 text-slate-700">{alert.mensagem}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                A caixa de mensagens esta vazia.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <header className="shrink-0 border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
@@ -26,6 +91,28 @@ export default function PortalPage() {
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">Portal do Servidor</p>
             </div>
             <div className="flex min-w-0 items-center gap-3">
+              {canReadDevolutivas && (
+                <button
+                  type="button"
+                  onClick={() => setShowDevolutivas(true)}
+                  className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-100"
+                  aria-label={
+                    devolutivaAlerts.length > 0
+                      ? `Abrir caixa de mensagens com ${devolutivaAlerts.length} mensagem(ns)`
+                      : 'Abrir caixa de mensagens'
+                  }
+                  title="Devolutivas"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  {devolutivaAlerts.length > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-600 px-1 text-xs font-bold text-white">
+                      {devolutivaAlerts.length}
+                    </span>
+                  )}
+                </button>
+              )}
               <span className="hidden truncate text-sm text-slate-600 sm:block">
                 {user?.email}
               </span>
@@ -53,6 +140,7 @@ export default function PortalPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {!isGestorEscolar && (
           <Can permission={PERMISSIONS.DOCUMENTOS_READ}>
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-3">
@@ -71,8 +159,10 @@ export default function PortalPage() {
               </button>
             </div>
           </Can>
+          )}
 
-          <Can permission={PERMISSIONS.AFASTAMENTOS_CREATE}>
+          {!isGestorEscolar && (
+          <Can permission={PERMISSIONS.SERVIDORES_READ}>
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50">
@@ -80,16 +170,17 @@ export default function PortalPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4 6 3v15M9 9h1m-1 4h1m4-4h1m-1 4h1M9 21v-4h6v4" />
                   </svg>
                 </div>
-                <h3 className="text-base font-semibold text-slate-950">Gestão Escolar</h3>
+                <h3 className="text-base font-semibold text-slate-950">Funcionários</h3>
               </div>
               <p className="mb-4 min-h-10 text-sm leading-5 text-slate-600">
-                Registre afastamentos, responda pendências e acompanhe sua unidade.
+                Consulte servidores vinculados à sua unidade escolar.
               </p>
               <button className="h-9 w-full rounded-md bg-cyan-700 px-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-800">
-                Acessar Unidade
+                Acessar Funcionários
               </button>
             </div>
           </Can>
+          )}
 
           <Can permission={PERMISSIONS.EDUCACAO_READ}>
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
@@ -124,9 +215,12 @@ export default function PortalPage() {
               <p className="mb-4 min-h-10 text-sm leading-5 text-slate-600">
                 Consulte e gerencie seus afastamentos funcionais.
               </p>
-              <button className="h-9 w-full rounded-md bg-green-700 px-3 text-sm font-semibold text-white transition-colors hover:bg-green-800">
+              <Link
+                to="/afastamentos"
+                className="flex h-9 w-full items-center justify-center rounded-md bg-green-700 px-3 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+              >
                 Acessar Afastamentos
-              </button>
+              </Link>
             </div>
           </Can>
 
@@ -190,7 +284,7 @@ export default function PortalPage() {
           </Can>
 
           {/* Servidores (Admin) */}
-          <Can permission={PERMISSIONS.SERVIDORES_READ}>
+          <Can permission={PERMISSIONS.SERVIDORES_DELETE}>
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-md bg-red-50">

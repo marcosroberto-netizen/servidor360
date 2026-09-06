@@ -6,6 +6,11 @@ Bem-vindo à documentação oficial do **Servidor 360**, o portal central para g
 
 A documentação está organizada em camadas progressivas,从 visão geral até detalhes técnicos:
 
+### Apresentação da Sprint
+Resumo curto para apresentação acadêmica, com roteiro, board e entregas por avaliação.
+
+- [Sprint de Autenticação e Afastamentos](APRESENTACAO_SPRINT_AUTENTICACAO_AFASTAMENTOS.md) — Roteiro da apresentação, quadro da sprint, caso de uso e diagrama de classes resumido
+
 ### 🎯 00 — Descrição Geral
 Visão geral do produto, conceitos e escopo do projeto.
 

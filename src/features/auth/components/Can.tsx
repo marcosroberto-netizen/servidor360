@@ -1,10 +1,5 @@
-import { usePermission, type Permission } from '../hooks/usePermission'
-
-interface CanProps {
-  permission: Permission
-  children: React.ReactNode
-  fallback?: React.ReactNode
-}
+import { usePermission } from '../hooks/usePermission'
+import type { CanProps } from '../types/auth.types'
 
 export function Can({ permission, children, fallback = null }: CanProps) {
   const hasPermission = usePermission(permission)

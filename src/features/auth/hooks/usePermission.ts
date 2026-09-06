@@ -1,50 +1,7 @@
-import { useAuthStore } from '../store/authStore'
-import type { PermissionString } from '../types/auth.types'
-
-export const PERMISSIONS = {
-  PORTAL_READ: 'portal:read',
-  EDUCACAO_READ: 'educacao:read',
-  INDICADORES_READ: 'indicadores:read',
-  USUARIOS_MANAGE: 'usuarios:manage',
-  PERFIS_MANAGE: 'perfis:manage',
-  PERMISSOES_MANAGE: 'permissoes:manage',
-  UNIDADES_READ: 'unidades:read',
-  UNIDADES_MANAGE: 'unidades:manage',
-  SETORES_READ: 'setores:read',
-  SETORES_MANAGE: 'setores:manage',
-  SERVIDORES_READ: 'servidores:read',
-  SERVIDORES_WRITE: 'servidores:write',
-  SERVIDORES_DELETE: 'servidores:delete',
-  DOCUMENTOS_READ: 'documentos:read',
-  DOCUMENTOS_WRITE: 'documentos:write',
-  DOCUMENTOS_ADMINISTRATIVOS_READ: 'documentos_administrativos:read',
-  DOCUMENTOS_FUNCIONAIS_READ: 'documentos_funcionais:read',
-  DOCUMENTOS_OCUPACIONAIS_READ: 'documentos_ocupacionais:read',
-  PRONTUARIO_OCUPACIONAL_READ: 'prontuario_ocupacional:read',
-  PRONTUARIO_OCUPACIONAL_WRITE: 'prontuario_ocupacional:write',
-  AFASTAMENTOS_READ: 'afastamentos:read',
-  AFASTAMENTOS_WRITE: 'afastamentos:write',
-  AFASTAMENTOS_DELETE: 'afastamentos:delete',
-  AFASTAMENTOS_CREATE: 'afastamentos:create',
-  AFASTAMENTOS_COMPLEMENTAR: 'afastamentos:complementar',
-  AFASTAMENTOS_SOLICITAR_COMPLEMENTACAO: 'afastamentos:solicitar_complementacao',
-  AFASTAMENTOS_ENCAMINHAR_AVALIACAO: 'afastamentos:encaminhar_avaliacao',
-  AFASTAMENTOS_ANALISAR: 'afastamentos:analisar',
-  AFASTAMENTOS_EMITIR_DEVOLUTIVA: 'afastamentos:emitir_devolutiva',
-  AFASTAMENTOS_LER_DEVOLUTIVA: 'afastamentos:ler_devolutiva',
-  AFASTAMENTOS_REGISTRAR_PROVIDENCIA: 'afastamentos:registrar_providencia',
-  AFASTAMENTOS_CONCLUIR: 'afastamentos:concluir',
-  AFASTAMENTOS_DEVOLUTIVA: 'afastamentos:devolutiva',
-  PRONTUARIO_READ: 'prontuario:read',
-  PRONTUARIO_WRITE: 'prontuario:write',
-  CAS_READ: 'cas:read',
-  CAS_WRITE: 'cas:write',
-  CAS_FILA: 'cas:fila',
-  RH_FILA: 'rh:fila',
-  ADMIN: '*',
-} as const
-
-export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS]
+import { PERMISSIONS } from '../constants/auth.constants'
+import { useAuth } from './authContext'
+import { useCurrentUserAuthz } from '../services/useAuth'
+import type { Permission, PermissionString } from '../types/auth.types'
 
 function hasPermission(perfis: string[], permissoes: PermissionString[], permission: Permission): boolean {
   void perfis
@@ -54,21 +11,28 @@ function hasPermission(perfis: string[], permissoes: PermissionString[], permiss
 }
 
 export function usePermission(permission?: Permission): boolean {
-  const { perfis, permissoes } = useAuthStore()
+  const { session } = useAuth()
+  const { data: authz } = useCurrentUserAuthz(Boolean(session))
 
   if (!permission) return true
 
-  return hasPermission(perfis, permissoes, permission)
+  return hasPermission(authz?.perfis ?? [], authz?.permissoes ?? [], permission)
 }
 
 export function useAnyPermission(permissions: Permission[]): boolean {
-  const { perfis, permissoes } = useAuthStore()
+  const { session } = useAuth()
+  const { data: authz } = useCurrentUserAuthz(Boolean(session))
 
-  return permissions.some((permission) => hasPermission(perfis, permissoes, permission))
+  return permissions.some((permission) =>
+    hasPermission(authz?.perfis ?? [], authz?.permissoes ?? [], permission)
+  )
 }
 
 export function useAllPermissions(permissions: Permission[]): boolean {
-  const { perfis, permissoes } = useAuthStore()
+  const { session } = useAuth()
+  const { data: authz } = useCurrentUserAuthz(Boolean(session))
 
-  return permissions.every((permission) => hasPermission(perfis, permissoes, permission))
+  return permissions.every((permission) =>
+    hasPermission(authz?.perfis ?? [], authz?.permissoes ?? [], permission)
+  )
 }

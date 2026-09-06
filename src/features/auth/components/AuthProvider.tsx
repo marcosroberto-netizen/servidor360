@@ -1,34 +1,13 @@
-import { useEffect, type ReactNode } from 'react'
 import { AuthContext } from '../hooks/authContext'
-import { useAuthStore } from '../store/authStore'
 import { useAuthStateSubscription, useCurrentUserAuthz, useLogout, useSession } from '../services/useAuth'
-
-interface AuthProviderProps {
-  children: ReactNode
-}
+import type { AuthProviderProps } from '../types/auth.types'
 
 export function AuthProvider({ children }: AuthProviderProps) {
   useAuthStateSubscription()
 
   const { data: session = null, isLoading } = useSession()
-  const { data: authz, isLoading: isLoadingAuthz } = useCurrentUserAuthz(Boolean(session))
+  const { isLoading: isLoadingAuthz } = useCurrentUserAuthz(Boolean(session))
   const { mutateAsync: logout } = useLogout()
-  const { reset, setPerfis, setPermissoes, setSetores, setUnidades, setUser } = useAuthStore()
-
-  useEffect(() => {
-    if (!session) {
-      reset()
-      return
-    }
-
-    if (!authz) return
-
-    setUser(authz.usuario)
-    setPerfis(authz.perfis)
-    setPermissoes(authz.permissoes)
-    setUnidades(authz.unidades)
-    setSetores(authz.setores ?? [])
-  }, [authz, reset, session, setPerfis, setPermissoes, setSetores, setUnidades, setUser])
 
   const signOut = async () => {
     await logout()

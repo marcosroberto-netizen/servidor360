@@ -2,13 +2,13 @@ import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/shared/lib/supabase'
 import { authKeys } from './authKeys'
-import type { AuthzPayload } from '../types/auth.types'
-import type { LoginDTO, RegisterDTO } from '../utils/authSchema'
+import type { AuthzPayload, LoginDTO, RegisterDTO } from '../types/auth.types'
 
 export function useLogin() {
   const queryClient = useQueryClient()
 
   return useMutation({
+    retry: false,
     mutationFn: async ({ email, password }: LoginDTO) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -27,6 +27,7 @@ export function useRegister() {
   const queryClient = useQueryClient()
 
   return useMutation({
+    retry: false,
     mutationFn: async ({ email, password, nome_completo, cpf }: RegisterDTO) => {
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -54,6 +55,7 @@ export function useLogout() {
   const queryClient = useQueryClient()
 
   return useMutation({
+    retry: false,
     mutationFn: async () => {
       await supabase.auth.signOut()
     },
@@ -106,6 +108,7 @@ export function useAuthStateSubscription() {
 
 export function useResetPassword() {
   return useMutation({
+    retry: false,
     mutationFn: async (email: string) => {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -117,6 +120,7 @@ export function useResetPassword() {
 
 export function useUpdatePassword() {
   return useMutation({
+    retry: false,
     mutationFn: async (password: string) => {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error

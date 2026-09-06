@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FeedbackDialog } from '@/shared/components/ui/FeedbackDialog'
 import { useLogin } from '../services/useAuth'
-import { loginSchema, type LoginDTO } from '../utils/authSchema'
+import { getAuthErrorMessage } from '../utils/authErrorMessage'
+import { loginSchema } from '../utils/authSchema'
+import type { LoginDTO } from '../types/auth.types'
 
 export function LoginForm() {
   const navigate = useNavigate()
@@ -22,11 +24,7 @@ export function LoginForm() {
         navigate('/portal')
       },
       onError: (error) => {
-        setDialogMessage(
-          error.message === 'Invalid login credentials'
-            ? 'E-mail ou senha incorretos.'
-            : error.message,
-        )
+        setDialogMessage(getAuthErrorMessage(error, 'Não foi possível entrar. Tente novamente.'))
       },
     })
   }
@@ -155,9 +153,12 @@ export function LoginForm() {
                   <label htmlFor="password" className="block text-sm font-semibold text-slate-700">
                     Senha
                   </label>
-                  <a href="/forgot-password" className="text-sm font-semibold text-emerald-800 hover:text-emerald-950">
+                  <Link
+                    to="/forgot-password"
+                    className="inline-flex h-8 items-center rounded-md px-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50 hover:text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                  >
                     Recuperar senha
-                  </a>
+                  </Link>
                 </div>
                 <input
                   id="password"
