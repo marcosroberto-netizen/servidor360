@@ -21,7 +21,10 @@ erDiagram
     PRONTUARIO ||--o{ PROCESSO : contem
     PROCESSO ||--o{ MOVIMENTACAO : possui
     PROCESSO |o--|| DEVOLUTIVA : possui
+    PROCESSO ||--o{ DOCUMENTO_DIGITAL : gera
+    DOCUMENTO_DIGITAL ||--o{ ASSINATURA_DIGITAL : recebe
     USUARIO ||--o{ HISTORICO : registra
+    USUARIO ||--o{ ASSINATURA_DIGITAL : realiza
     SERVIDOR ||--o{ HISTORICO : possui
 
     USUARIO {
@@ -138,6 +141,34 @@ erDiagram
         text descricao
         text orientacoes
         timestamp criado_em
+    }
+
+    DOCUMENTO_DIGITAL {
+        uuid id PK
+        uuid processo_id FK
+        string tipo
+        string titulo
+        string protocolo UK
+        string status
+        jsonb conteudo
+        string hash_sha256
+        string qr_payload
+        uuid criado_por FK
+        timestamp criado_em
+        timestamp assinado_em
+    }
+
+    ASSINATURA_DIGITAL {
+        uuid id PK
+        uuid documento_id FK
+        uuid assinante_id FK
+        string assinante_nome
+        string assinante_email
+        string perfil_assinante
+        string hash_sha256
+        string ip
+        string user_agent
+        timestamp assinado_em
     }
 
     HISTORICO {
@@ -329,6 +360,40 @@ Registra todas as ações relevantes para auditoria.
 | detalhes | jsonb | Detalhes adicionais | |
 | criado_em | timestamp | Data de criação | NOT NULL, DEFAULT NOW() |
 
+### 3.15 DOCUMENTO_DIGITAL
+Armazena versões digitais congeladas e assináveis geradas pelo sistema.
+
+| Coluna | Tipo | Descrição | Restrições |
+|--------|------|-----------|------------|
+| id | uuid | Identificador único | PK, NOT NULL |
+| processo_id | uuid | Referência ao processo/módulo de origem | FK, NOT NULL |
+| tipo | string | Tipo do documento digital | NOT NULL |
+| titulo | string | Título exibido ao usuário | NOT NULL |
+| protocolo | string | Protocolo de validação | UNIQUE, NOT NULL |
+| status | string | Situação do documento | NOT NULL |
+| conteudo | jsonb | Snapshot do conteúdo assinado | NOT NULL |
+| hash_sha256 | string | Hash criptográfico do conteúdo | NOT NULL |
+| qr_payload | string | Dados usados no QR Code | NOT NULL |
+| criado_por | uuid | Usuário que gerou a versão | FK |
+| criado_em | timestamp | Data de criação | NOT NULL, DEFAULT NOW() |
+| assinado_em | timestamp | Data da assinatura | |
+
+### 3.16 ASSINATURA_DIGITAL
+Registra assinaturas eletrônicas internas vinculadas aos documentos digitais.
+
+| Coluna | Tipo | Descrição | Restrições |
+|--------|------|-----------|------------|
+| id | uuid | Identificador único | PK, NOT NULL |
+| documento_id | uuid | Documento assinado | FK, NOT NULL |
+| assinante_id | uuid | Usuário autenticado que assinou | FK, NOT NULL |
+| assinante_nome | string | Nome do assinante no momento da assinatura | NOT NULL |
+| assinante_email | string | E-mail do assinante | |
+| perfil_assinante | string | Perfil utilizado na assinatura | |
+| hash_sha256 | string | Hash da versão assinada | NOT NULL |
+| ip | string | IP capturado quando disponível | |
+| user_agent | string | Navegador/dispositivo informado | |
+| assinado_em | timestamp | Data e hora da assinatura | NOT NULL |
+
 ---
 
 ## 4. Índices Recomendados
@@ -354,6 +419,13 @@ CREATE INDEX idx_processo_prontuario ON PROCESSO(prontuario_id);
 CREATE INDEX idx_documento_prontuario ON DOCUMENTO(prontuario_id);
 CREATE INDEX idx_documento_categoria ON DOCUMENTO(categoria);
 CREATE INDEX idx_documento_restrito ON DOCUMENTO(restrito);
+
+-- DOCUMENTO_DIGITAL
+CREATE INDEX idx_documento_digital_processo ON DOCUMENTO_DIGITAL(processo_id);
+CREATE INDEX idx_documento_digital_protocolo ON DOCUMENTO_DIGITAL(protocolo);
+
+-- ASSINATURA_DIGITAL
+CREATE INDEX idx_assinatura_digital_documento ON ASSINATURA_DIGITAL(documento_id);
 
 -- MOVIMENTACAO
 CREATE INDEX idx_movimentacao_processo ON MOVIMENTACAO(processo_id);
@@ -391,7 +463,10 @@ CREATE INDEX idx_documento_busca ON DOCUMENTO USING gin(to_tsvector('portuguese'
 | PRONTUARIO ↔ PROCESSO | 1:N | Um prontuário contém múltiplos processos |
 | PROCESSO ↔ MOVIMENTACAO | 1:N | Um processo possui múltiplas movimentações |
 | PROCESSO ↔ DEVOLUTIVA | 1:0..1 | Um processo pode ter no máximo uma devolutiva |
+| PROCESSO ↔ DOCUMENTO_DIGITAL | 1:N | Um processo pode gerar múltiplos documentos digitais |
+| DOCUMENTO_DIGITAL ↔ ASSINATURA_DIGITAL | 1:N | Um documento pode receber uma ou mais assinaturas |
 | USUARIO ↔ HISTORICO | 1:N | Um usuário registra múltiplos históricos |
+| USUARIO ↔ ASSINATURA_DIGITAL | 1:N | Um usuário pode assinar múltiplos documentos |
 | SERVIDOR ↔ HISTORICO | 1:N | Um servidor possui múltiplos históricos |
 
 ---
@@ -419,6 +494,8 @@ Para o MVP, recomenda-se o uso de **PostgreSQL** devido a:
 - Campos sensíveis (CPF, senha_hash) devem ter proteção adicional
 - Documentos marcados como `restrito = true` exigem permissão específica
 - Implementar row-level security (RLS) para controle de acesso por unidade
+- Documentos digitais assinados devem ser tratados como imutáveis e corrigidos por nova versão
+- Assinaturas eletrônicas internas devem registrar hash, usuário, perfil e data/hora
 
 ### 6.5 Performance
 - Índices foram definidos para as consultas mais comuns

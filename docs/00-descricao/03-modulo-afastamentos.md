@@ -53,6 +53,23 @@ Fluxo inicial:
 
 Após o envio, o sistema deverá gerar um protocolo e vincular o processo ao prontuário funcional do servidor.
 
+## 3.1 Cofre Digital e Assinatura
+
+Durante a tramitação, documentos formais poderão ser gerados dentro do próprio Servidor 360, como resumo do processo, devolutiva formal ou providência administrativa.
+
+Esses documentos deverão ficar salvos no cofre digital do processo e poderão receber assinatura eletrônica interna.
+
+Fluxo da assinatura:
+1. gerar documento digital;
+2. congelar a versão do conteúdo;
+3. calcular hash SHA-256;
+4. solicitar confirmação de senha do usuário;
+5. registrar assinatura eletrônica;
+6. gerar protocolo e QR Code de validação;
+7. disponibilizar o documento aos interessados autorizados.
+
+A assinatura interna não exige download, upload, certificado digital ou integração externa para o MVP.
+
 ## 4. Tramitação
 
 Exemplo de estados:
@@ -195,6 +212,7 @@ O sistema deverá registrar as principais ações:
 
 Ao final do processo, o Servidor 360 deverá possuir um registro completo do afastamento, contendo:
 - documento de origem;
+- documentos digitais assinados;
 - protocolo;
 - movimentações;
 - análise;
@@ -218,3 +236,4 @@ Para a primeira versão, priorizar:
 - conclusão administrativa;
 - histórico;
 - controle de acesso.
+- assinatura eletrônica interna de documentos digitais.

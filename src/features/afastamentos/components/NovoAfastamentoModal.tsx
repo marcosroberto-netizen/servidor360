@@ -1,7 +1,7 @@
 import { useNovoAfastamentoForm } from "../hooks/useNovoAfastamentoForm";
 import type { NovoAfastamentoModalProps } from "../types/afastamentos.types";
-import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { FeedbackDialog } from "@/shared/components/ui/FeedbackDialog";
+import { AssinaturaAtestadoDialog } from "./AssinaturaAtestadoDialog";
 import { NovoAfastamentoForm } from "./NovoAfastamentoForm";
 import { NovoAfastamentoServidorList } from "./NovoAfastamentoServidorList";
 
@@ -16,18 +16,21 @@ export function NovoAfastamentoModal({
     filteredServidores,
     form,
     errorMessage,
+    isDocumentoLoading,
     isPending,
     search,
     selectedServidor,
-    showConfirmation,
+    showSignatureDialog,
     successMessage,
+    assinaturaSenha,
     closeFeedback,
-    confirmSubmit,
     handleSubmit,
     resetAndClose,
-    setShowConfirmation,
+    setAssinaturaSenha,
+    setShowSignatureDialog,
     setSearch,
     setSelectedServidor,
+    submitAfastamento,
     updateDocumento,
     updateField,
   } = useNovoAfastamentoForm(servidores, onClose);
@@ -41,14 +44,15 @@ export function NovoAfastamentoModal({
       aria-modal="true"
     >
       <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-strong">
-        <ConfirmDialog
-          open={showConfirmation}
-          title="Confirmar envio"
-          description="Confirme para registrar o afastamento e enviar o documento anexado."
-          confirmLabel="Confirmar envio"
+        <AssinaturaAtestadoDialog
+          open={showSignatureDialog}
+          servidor={selectedServidor}
+          senha={assinaturaSenha}
           isLoading={isPending}
-          onCancel={() => setShowConfirmation(false)}
-          onConfirm={confirmSubmit}
+          onSenhaChange={setAssinaturaSenha}
+          onCancel={() => setShowSignatureDialog(false)}
+          onSubmitSigned={() => submitAfastamento(true)}
+          onSubmitUnsigned={() => submitAfastamento(false)}
         />
         <FeedbackDialog
           open={isPending}
@@ -105,6 +109,7 @@ export function NovoAfastamentoModal({
             selectedServidor={selectedServidor}
             canSubmit={canSubmit}
             isPending={isPending}
+            isDocumentoLoading={isDocumentoLoading}
             errorMessage={errorMessage}
             onClose={resetAndClose}
             onFieldChange={updateField}

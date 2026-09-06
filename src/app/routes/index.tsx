@@ -10,6 +10,7 @@ const resetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const portalPage = lazy(() => import('@/pages/PortalPage'))
 const afastamentosPage = lazy(() => import('@/pages/AfastamentosPage'))
 const novoAfastamentoPage = lazy(() => import('@/pages/NovoAfastamentoPage'))
+const validarDocumentoPage = lazy(() => import('@/pages/ValidarDocumentoPage'))
 const unauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 
 export const router = createBrowserRouter([
@@ -67,6 +68,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute permission="afastamentos:create">
         <Suspense fallback={<PageSkeleton />}>
           {createElement(novoAfastamentoPage)}
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/validar-documento/:protocolo',
+    element: (
+      <ProtectedRoute permission="afastamentos:validar_documento">
+        <Suspense fallback={<PageSkeleton />}>
+          {createElement(validarDocumentoPage)}
         </Suspense>
       </ProtectedRoute>
     ),

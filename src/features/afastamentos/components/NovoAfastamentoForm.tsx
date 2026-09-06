@@ -1,3 +1,4 @@
+import { FileUp, Loader2 } from "lucide-react";
 import type { NovoAfastamentoFormProps } from "../types/afastamentos.types";
 import { EmptyState, FieldLabel } from "./AfastamentoFormPrimitives";
 
@@ -6,6 +7,7 @@ export function NovoAfastamentoForm({
   selectedServidor,
   canSubmit,
   isPending,
+  isDocumentoLoading,
   errorMessage,
   onClose,
   onFieldChange,
@@ -69,13 +71,30 @@ export function NovoAfastamentoForm({
             </h3>
             <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
               <input
+                id="documento-afastamento"
                 type="file"
                 accept="application/pdf,image/png,image/jpeg,image/webp"
                 onChange={(event) =>
                   onDocumentoChange(event.target.files?.[0] ?? null)
                 }
-                className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-700 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+                className="sr-only"
               />
+              <label
+                htmlFor="documento-afastamento"
+                className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
+              >
+                {isDocumentoLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <FileUp className="h-4 w-4" aria-hidden="true" />
+                )}
+                {isDocumentoLoading ? "Carregando..." : "Carregar atestado"}
+              </label>
+              <p className="mt-3 text-sm text-slate-600">
+                {form.documentoArquivo
+                  ? form.documentoArquivo.name
+                  : "PDF, PNG, JPG ou WEBP ate 10 MB."}
+              </p>
             </div>
           </section>
           <section>

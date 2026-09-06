@@ -88,6 +88,7 @@ export interface NovoAfastamentoFormProps {
   selectedServidor: ServidorOption | null;
   canSubmit: boolean;
   isPending: boolean;
+  isDocumentoLoading: boolean;
   errorMessage: string | null;
   onClose: () => void;
   onFieldChange: (field: keyof NovoAfastamentoFormFields, value: string) => void;
@@ -149,12 +150,46 @@ export interface AfastamentoProvidencia {
   registradaEm: string;
 }
 
+export type DocumentoDigitalStatus =
+  | "rascunho"
+  | "aguardando_assinatura"
+  | "assinado"
+  | "substituido"
+  | "cancelado";
+
+export interface AfastamentoAssinaturaDigital {
+  id: string;
+  assinanteId: string;
+  assinanteNome: string;
+  assinanteEmail: string | null;
+  perfilAssinante: string | null;
+  assinadoEm: string;
+  ip: string | null;
+  userAgent: string | null;
+}
+
+export interface AfastamentoDocumentoDigital {
+  id: string;
+  tipo: string;
+  titulo: string;
+  protocolo: string;
+  status: DocumentoDigitalStatus;
+  conteudo: Record<string, unknown>;
+  hashSha256: string;
+  qrPayload: string;
+  criadoPor: string | null;
+  criadoEm: string;
+  assinadoEm: string | null;
+  assinaturas: AfastamentoAssinaturaDigital[];
+}
+
 export interface AfastamentoDetalhe extends AfastamentoResumo {
   observacoes: string | null;
   movimentacoes: AfastamentoMovimentacao[];
   complementacoes: AfastamentoComplementacao[];
   devolutivas: AfastamentoDevolutiva[];
   providencias: AfastamentoProvidencia[];
+  documentosDigitais: AfastamentoDocumentoDigital[];
 }
 
 export interface RegistrarAnaliseInput {
@@ -186,4 +221,31 @@ export interface RegistrarProvidenciaInput {
   afastamentoId: string;
   descricao: string;
   concluir: boolean;
+}
+
+export interface GerarDocumentoDigitalInput {
+  afastamentoId: string;
+  tipo: string;
+  titulo: string;
+  conteudo: Record<string, unknown>;
+  hashSha256: string;
+}
+
+export interface AssinarDocumentoDigitalInput {
+  documentoId: string;
+  password: string;
+  perfilAssinante?: string;
+}
+
+export interface ValidacaoDocumentoDigital {
+  id: string;
+  protocolo: string;
+  titulo: string;
+  tipo: string;
+  status: DocumentoDigitalStatus;
+  hashSha256: string;
+  assinadoEm: string | null;
+  processoProtocolo: string | null;
+  servidorNome: string;
+  assinantes: AfastamentoAssinaturaDigital[];
 }

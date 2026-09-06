@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  assinarDocumentoDigital,
   createAfastamento,
   emitirDevolutiva,
+  gerarDocumentoDigital,
   getAfastamentoDetalhe,
   listAfastamentos,
   listDevolutivaAlerts,
@@ -13,7 +15,9 @@ import {
 import { afastamentosKeys } from "../services/afastamentosKeys";
 import type {
   AfastamentoFormData,
+  AssinarDocumentoDigitalInput,
   EmitirDevolutivaInput,
+  GerarDocumentoDigitalInput,
   RegistrarAnaliseInput,
   RegistrarProvidenciaInput,
   ResponderComplementacaoInput,
@@ -116,6 +120,37 @@ export function useEmitirDevolutiva() {
       queryClient.invalidateQueries({
         queryKey: afastamentosKeys.devolutivas(),
       });
+    },
+  });
+}
+
+export function useGerarDocumentoDigital() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: GerarDocumentoDigitalInput) =>
+      gerarDocumentoDigital(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: afastamentosKeys.detailBase(variables.afastamentoId),
+      });
+    },
+  });
+}
+
+export function useAssinarDocumentoDigital(afastamentoId: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: AssinarDocumentoDigitalInput) =>
+      assinarDocumentoDigital(input),
+    onSuccess: () => {
+      if (afastamentoId) {
+        queryClient.invalidateQueries({
+          queryKey: afastamentosKeys.detailBase(afastamentoId),
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: afastamentosKeys.listas() });
     },
   });
 }

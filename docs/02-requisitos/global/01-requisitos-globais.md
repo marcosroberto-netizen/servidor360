@@ -22,6 +22,7 @@ Principais responsabilidades:
 - servidores;
 - prontuário funcional;
 - documentos;
+- assinatura eletrônica interna;
 - busca;
 - histórico;
 - rastreabilidade;
@@ -104,6 +105,15 @@ O sistema deverá permitir que módulos apresentem pendências e atividades ao u
 ## RF-G24 — Indicadores Gerais
 O sistema deverá permitir a apresentação de informações consolidadas a usuários autorizados.
 
+## RF-G25 — Assinatura Eletrônica Interna
+O sistema deverá permitir que documentos digitais sejam assinados eletronicamente por usuários autenticados e autorizados.
+
+## RF-G26 — Versão Imutável de Documento
+O sistema deverá preservar uma versão congelada do conteúdo assinado, impedindo alteração direta após a assinatura.
+
+## RF-G27 — Validação Interna de Documento
+O sistema deverá permitir validar documentos digitais por protocolo ou QR Code, respeitando permissões e escopo de acesso.
+
 ---
 
 # 4. Regras de Negócio Globais
@@ -137,6 +147,12 @@ Informações gerenciais deverão evitar exposição de dados restritos além do
 
 ## RN-G10 — Modularidade
 Regras específicas de processos deverão permanecer em seus respectivos módulos e não no núcleo global.
+
+## RN-G11 — Integridade de Documento Assinado
+Todo documento assinado deverá possuir hash criptográfico, protocolo e vínculo com o usuário assinante.
+
+## RN-G12 — Correção por Nova Versão
+Documentos assinados não deverão ser editados diretamente. Correções deverão gerar novo documento, versão complementar ou substituição rastreável.
 
 ---
 
@@ -175,6 +191,9 @@ Novos módulos deverão poder utilizar os recursos globais sem duplicar suas res
 ## RNF-G11 — Privacidade
 O tratamento de dados deverá considerar finalidade, necessidade e sensibilidade das informações.
 
+## RNF-G12 — Evidência de Autoria
+Assinaturas eletrônicas internas deverão registrar usuário, perfil, data, hora e evidências técnicas disponíveis.
+
 ---
 
 # 6. Critérios Gerais de Aceite
@@ -189,4 +208,5 @@ O núcleo global será considerado aderente quando:
 6. documentos puderem ser vinculados ao prontuário;
 7. informações médico/ocupacionais permanecerem protegidas;
 8. ações relevantes forem rastreáveis;
-9. módulos puderem utilizar os serviços globais sem duplicação de responsabilidades.
+9. documentos digitais puderem ser assinados e validados internamente;
+10. módulos puderem utilizar os serviços globais sem duplicação de responsabilidades.

@@ -1,5 +1,13 @@
 import { useMemo, useState, type SyntheticEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateAfastamento } from "./useAfastamentos";
+import {
+  assinarDocumentoDigital,
+  confirmarSenhaUsuario,
+  createSha256Hash,
+  gerarDocumentoDigital,
+} from "../services/afastamentosService";
+import { afastamentosKeys } from "../services/afastamentosKeys";
 import type {
   NovoAfastamentoFormFields,
   ServidorOption,
@@ -28,9 +36,13 @@ export function useNovoAfastamentoForm(
   const [selectedServidor, setSelectedServidor] =
     useState<ServidorOption | null>(null);
   const [form, setForm] = useState<NovoAfastamentoFormFields>(initialForm);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [assinaturaSenha, setAssinaturaSenha] = useState("");
+  const [isDocumentoLoading, setIsDocumentoLoading] = useState(false);
+  const [isSigningAtestado, setIsSigningAtestado] = useState(false);
+  const queryClient = useQueryClient();
   const createAfastamento = useCreateAfastamento();
 
   const filteredServidores = useMemo(() => {
@@ -54,23 +66,31 @@ export function useNovoAfastamentoForm(
 
   const updateDocumento = (value: File | null) => {
     setErrorMessage(null);
+    setIsDocumentoLoading(Boolean(value));
     const fileError = validateDocumentoFile(value);
 
     if (fileError) {
       setErrorMessage(fileError);
+      setIsDocumentoLoading(false);
       return;
     }
 
-    setForm((current) => ({ ...current, documentoArquivo: value }));
+    window.setTimeout(() => {
+      setForm((current) => ({ ...current, documentoArquivo: value }));
+      setIsDocumentoLoading(false);
+    }, 450);
   };
 
   const resetAndClose = () => {
     setSearch("");
     setSelectedServidor(null);
     setForm(initialForm());
-    setShowConfirmation(false);
+    setShowSignatureDialog(false);
     setSuccessMessage(null);
     setErrorMessage(null);
+    setAssinaturaSenha("");
+    setIsDocumentoLoading(false);
+    setIsSigningAtestado(false);
     onClose();
   };
 
@@ -81,27 +101,92 @@ export function useNovoAfastamentoForm(
         form.dataInicio &&
         form.dataFim &&
         form.motivo.trim(),
-    ) && !createAfastamento.isPending;
+    ) && !createAfastamento.isPending && !isSigningAtestado;
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     event.preventDefault();
     if (!selectedServidor || !canSubmit) return;
-    setShowConfirmation(true);
+    setErrorMessage(null);
+    setShowSignatureDialog(true);
   };
 
-  const confirmSubmit = () => {
+  const submitAfastamento = async (shouldSign: boolean) => {
     if (!selectedServidor || !canSubmit) return;
-    setShowConfirmation(false);
+    if (shouldSign && !assinaturaSenha.trim()) return;
+    setShowSignatureDialog(false);
 
-    createAfastamento.mutate(
-      { servidorId: selectedServidor.id, ...form },
-      {
-        onSuccess: () => setSuccessMessage("Afastamento registrado com sucesso."),
-        onError: (error) => {
-          setErrorMessage(getErrorMessage(error));
-        },
-      },
-    );
+    try {
+      setIsSigningAtestado(true);
+
+      if (shouldSign) {
+        await confirmarSenhaUsuario(assinaturaSenha);
+      }
+
+      const afastamentoId = await createAfastamento.mutateAsync({
+        servidorId: selectedServidor.id,
+        ...form,
+      });
+
+      if (shouldSign) {
+        const conteudo = {
+          tipoDocumento: "atestado_enviado",
+          processo: {
+            id: afastamentoId,
+            tipo: form.tipo,
+            periodo: {
+              inicio: form.dataInicio,
+              fim: form.dataFim,
+            },
+            motivo: form.motivo,
+            observacoes: form.observacoes,
+          },
+          servidor: {
+            id: selectedServidor.id,
+            nome: selectedServidor.nome,
+            matricula: selectedServidor.matricula,
+            cargo: selectedServidor.cargo,
+            unidade: selectedServidor.unidadeNome,
+          },
+          documentoAnexado: form.documentoArquivo
+            ? {
+                nome: form.documentoArquivo.name,
+                tipo: form.documentoArquivo.type,
+                tamanhoBytes: form.documentoArquivo.size,
+              }
+            : null,
+          geradoEm: new Date().toISOString(),
+        };
+        const hashSha256 = await createSha256Hash(conteudo);
+        const documentoId = await gerarDocumentoDigital({
+          afastamentoId,
+          tipo: "atestado_enviado",
+          titulo: "Atestado enviado para analise",
+          conteudo,
+          hashSha256,
+        });
+
+        await assinarDocumentoDigital({
+          documentoId,
+          password: assinaturaSenha,
+          perfilAssinante: "solicitante",
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: afastamentosKeys.listas() });
+      await queryClient.invalidateQueries({
+        queryKey: afastamentosKeys.detailBase(afastamentoId),
+      });
+      setSuccessMessage(
+        shouldSign
+          ? "Afastamento registrado e atestado assinado com sucesso."
+          : "Afastamento registrado com sucesso.",
+      );
+      setAssinaturaSenha("");
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setIsSigningAtestado(false);
+    }
   };
 
   return {
@@ -109,21 +194,24 @@ export function useNovoAfastamentoForm(
     filteredServidores,
     form,
     errorMessage,
-    isPending: createAfastamento.isPending,
+    isDocumentoLoading,
+    isPending: createAfastamento.isPending || isSigningAtestado,
     search,
     selectedServidor,
-    showConfirmation,
+    showSignatureDialog,
     successMessage,
+    assinaturaSenha,
     closeFeedback: () => {
       setErrorMessage(null);
       setSuccessMessage(null);
     },
-    confirmSubmit,
+    submitAfastamento,
     handleSubmit,
     resetAndClose,
-    setShowConfirmation,
+    setShowSignatureDialog,
     setSearch,
     setSelectedServidor,
+    setAssinaturaSenha,
     updateDocumento,
     updateField,
   };

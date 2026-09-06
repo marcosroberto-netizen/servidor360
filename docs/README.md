@@ -17,6 +17,7 @@ Visão geral do produto, conceitos e escopo do projeto.
 - [Etapas Essenciais do Projeto](00-descricao/01-etapas-essenciais.md) — Sequência de trabalho e estrutura da documentação
 - [Descrição Geral do Servidor 360](00-descricao/02-descricao-geral.md) — Visão do produto, conceito do portal, prontuário funcional digital
 - [Módulo de Afastamentos](00-descricao/03-modulo-afastamentos.md) — Descrição específica do primeiro módulo
+- [Assinatura Eletrônica Interna](00-descricao/04-assinatura-eletronica-interna.md) — Cofre digital, assinatura interna e validação por protocolo
 
 ### 📐 02 — Requisitos
 Definição detalhada dos requisitos funcionais, não funcionais e regras de negócio.

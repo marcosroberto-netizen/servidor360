@@ -20,6 +20,8 @@ O módulo será responsável por:
 - permitir complementação;
 - encaminhar para avaliação;
 - registrar devolutivas;
+- gerar documentos digitais assináveis;
+- coletar assinatura eletrônica interna;
 - encaminhar para providências administrativas;
 - concluir o processo.
 
@@ -133,6 +135,15 @@ O módulo deverá apresentar a sequência cronológica das movimentações.
 ## RF-A27 — Pendências por Perfil
 O módulo deverá fornecer ao núcleo global as pendências associadas a cada usuário.
 
+## RF-A28 — Gerar Documento Digital
+O módulo deverá permitir gerar documentos digitais a partir dos dados do processo de afastamento, como resumo do processo e devolutiva formal.
+
+## RF-A29 — Assinar Documento Digital
+Usuário autorizado deverá poder assinar eletronicamente um documento digital mediante sessão autenticada e confirmação de senha.
+
+## RF-A30 — Validar Documento Digital
+O módulo deverá permitir validar documento digital por protocolo ou QR Code, exibindo status, hash, assinante e vínculo com o processo.
+
 ---
 
 # 5. Estados Iniciais do Processo
@@ -191,6 +202,12 @@ O processo somente poderá ser concluído sem etapas obrigatórias pendentes.
 ## RN-A12 — Rastreabilidade
 Mudanças de etapa e principais ações deverão ser registradas.
 
+## RN-A13 — Documento Assinado Imutável
+Após assinatura, o documento digital deverá permanecer imutável. Alterações deverão gerar novo documento ou versão complementar.
+
+## RN-A14 — Assinatura Vinculada ao Processo
+A assinatura deverá permanecer vinculada ao documento, ao processo, ao servidor e ao usuário assinante.
+
 ---
 
 # 7. Critérios de Aceite
@@ -208,4 +225,6 @@ O módulo será considerado aderente ao MVP quando:
 9. processo puder ser encaminhado ao RH;
 10. RH puder registrar providência;
 11. processo puder ser concluído;
-12. todo o fluxo permanecer rastreável.
+12. documentos digitais puderem ser gerados e assinados;
+13. documentos assinados puderem ser validados por protocolo ou QR Code;
+14. todo o fluxo permanecer rastreável.

@@ -9,14 +9,18 @@ import { AfastamentosTable } from "../components/AfastamentosTable";
 import { NovoAfastamentoModal } from "../components/NovoAfastamentoModal";
 import {
   useAfastamentoDetalhe,
+  useAssinarDocumentoDigital,
   useAfastamentos,
   useEmitirDevolutiva,
+  useGerarDocumentoDigital,
   useRegistrarAnalise,
   useRegistrarProvidencia,
   useResponderComplementacao,
   useServidoresForAfastamento,
 } from "../hooks/useAfastamentos";
+import { createSha256Hash } from "../services/afastamentosService";
 import type {
+  AfastamentoDetalhe,
   AfastamentosPageProps,
   DevolutivaResultado,
   RegistrarAnaliseInput,
@@ -94,6 +98,8 @@ export default function AfastamentosPage({
   const registrarAnalise = useRegistrarAnalise();
   const responderComplementacao = useResponderComplementacao();
   const emitirDevolutiva = useEmitirDevolutiva();
+  const gerarDocumentoDigital = useGerarDocumentoDigital();
+  const assinarDocumentoDigital = useAssinarDocumentoDigital(selectedId);
   const registrarProvidencia = useRegistrarProvidencia();
   const permissions = authorization.permissions;
   const canCreate = hasPermission(
@@ -126,6 +132,16 @@ export default function AfastamentosPage({
     AFASTAMENTOS_PERMISSIONS.VIEW_DOCUMENT,
     AFASTAMENTOS_PERMISSIONS.ADMIN,
   );
+  const canGenerateDocument = hasPermission(
+    permissions,
+    AFASTAMENTOS_PERMISSIONS.GERAR_DOCUMENTO,
+    AFASTAMENTOS_PERMISSIONS.ADMIN,
+  );
+  const canSignDocument = hasPermission(
+    permissions,
+    AFASTAMENTOS_PERMISSIONS.ASSINAR_DOCUMENTO,
+    AFASTAMENTOS_PERMISSIONS.ADMIN,
+  );
   const { data: detalhe, isLoading: loadingDetail } = useAfastamentoDetalhe(
     selectedId,
     canViewDocument,
@@ -147,6 +163,8 @@ export default function AfastamentosPage({
     registrarAnalise.isPending ||
     responderComplementacao.isPending ||
     emitirDevolutiva.isPending ||
+    gerarDocumentoDigital.isPending ||
+    assinarDocumentoDigital.isPending ||
     registrarProvidencia.isPending;
   const submitAnalise = (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     event.preventDefault();
@@ -187,6 +205,49 @@ export default function AfastamentosPage({
 
     setErrorMessage(null);
     setDocumentoArquivo(file);
+  };
+  const handleGenerateDocument = async (tipo: "devolutiva_formal") => {
+    if (!detalhe) return;
+
+    try {
+      const conteudo = buildDocumentoDigitalContent(detalhe, tipo);
+      const hashSha256 = await createSha256Hash(conteudo);
+
+      gerarDocumentoDigital.mutate(
+        {
+          afastamentoId: detalhe.id,
+          tipo,
+          titulo: "Devolutiva formal do afastamento",
+          conteudo,
+          hashSha256,
+        },
+        {
+          onSuccess: () => {
+            setSuccessTitle("Documento digital gerado");
+            setErrorMessage(null);
+          },
+          onError: handleMutationError,
+        },
+      );
+    } catch (error) {
+      handleMutationError(error);
+    }
+  };
+  const handleSignDocument = (documentoId: string, password: string) => {
+    assinarDocumentoDigital.mutate(
+      {
+        documentoId,
+        password,
+        perfilAssinante: authorization.profiles[0] ?? "usuario",
+      },
+      {
+        onSuccess: () => {
+          setSuccessTitle("Documento assinado");
+          setErrorMessage(null);
+        },
+        onError: handleMutationError,
+      },
+    );
   };
   const confirmPendingAction = () => {
     if (!detalhe || !pendingAction) return;
@@ -332,6 +393,10 @@ export default function AfastamentosPage({
           canIssueReturn={canIssueReturn}
           canRegisterProvidence={canRegisterProvidence}
           canViewDocument={canViewDocument}
+          canGenerateDocument={canGenerateDocument}
+          canSignDocument={canSignDocument}
+          isGeneratingDocument={gerarDocumentoDigital.isPending}
+          isSigningDocument={assinarDocumentoDigital.isPending}
           analise={analise}
           proximaAcao={proximaAcao}
           complemento={complemento}
@@ -355,6 +420,8 @@ export default function AfastamentosPage({
           onEncaminharRhChange={setEncaminharRh}
           onProvidenciaChange={setProvidencia}
           onConcluirChange={setConcluir}
+          onGenerateDocument={handleGenerateDocument}
+          onSignDocument={handleSignDocument}
           onSubmitAnalise={submitAnalise}
           onSubmitComplementacao={submitComplementacao}
           onSubmitDevolutiva={submitDevolutiva}
@@ -363,4 +430,41 @@ export default function AfastamentosPage({
       )}
     </ModuleLayout>
   );
+}
+
+function buildDocumentoDigitalContent(
+  detalhe: AfastamentoDetalhe,
+  tipo: "devolutiva_formal",
+) {
+  const devolutiva = detalhe.devolutivas[0] ?? null;
+
+  const base = {
+    tipoDocumento: tipo,
+    processo: {
+      id: detalhe.id,
+      protocolo: detalhe.protocolo,
+      status: detalhe.status,
+      tipo: detalhe.tipo,
+      periodo: {
+        inicio: detalhe.dataInicio,
+        fim: detalhe.dataFim,
+      },
+      motivo: detalhe.motivo,
+      observacoes: detalhe.observacoes,
+    },
+    servidor: {
+      id: detalhe.servidorId,
+      nome: detalhe.servidorNome,
+      matricula: detalhe.servidorMatricula,
+      cargo: detalhe.servidorCargo,
+      unidade: detalhe.unidadeNome,
+    },
+    geradoEm: new Date().toISOString(),
+  };
+
+  return {
+    ...base,
+    devolutiva,
+    providencias: detalhe.providencias,
+  };
 }

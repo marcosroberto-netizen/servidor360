@@ -1,15 +1,22 @@
 export { default as AfastamentosPage } from "./pages/AfastamentosPage";
 export {
   useAfastamentoDetalhe,
+  useAssinarDocumentoDigital,
   useAfastamentos,
   useCreateAfastamento,
   useDevolutivaAlerts,
   useEmitirDevolutiva,
+  useGerarDocumentoDigital,
   useRegistrarAnalise,
   useRegistrarProvidencia,
   useResponderComplementacao,
   useServidoresForAfastamento,
 } from "./hooks/useAfastamentos";
+export {
+  confirmarSenhaUsuario,
+  createSha256Hash,
+  validarDocumentoDigital,
+} from "./services/afastamentosService";
 export { AFASTAMENTOS_PERMISSIONS } from "./constants/afastamentos.constants";
 export type {
   AfastamentoComplementacao,
@@ -21,10 +28,14 @@ export type {
   AfastamentoResumo,
   AfastamentosAuthorization,
   AfastamentosPageProps,
+  AfastamentoDocumentoDigital,
+  AfastamentoAssinaturaDigital,
   AfastamentoStatus,
+  AssinarDocumentoDigitalInput,
   DevolutivaAlert,
   DevolutivaResultado,
   EmitirDevolutivaInput,
+  GerarDocumentoDigitalInput,
   ListServidoresForAfastamentoParams,
   NovoAfastamentoFormFields,
   NovoAfastamentoFormProps,
@@ -34,4 +45,5 @@ export type {
   RegistrarProvidenciaInput,
   ResponderComplementacaoInput,
   ServidorOption,
+  ValidacaoDocumentoDigital,
 } from "./types/afastamentos.types";

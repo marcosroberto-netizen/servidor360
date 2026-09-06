@@ -2,19 +2,23 @@ import { supabase } from "@/shared/lib/supabase";
 import type {
   AfastamentoComplementacao,
   AfastamentoDetalhe,
+  AfastamentoDocumentoDigital,
   AfastamentoDevolutiva,
   AfastamentoFormData,
   AfastamentoMovimentacao,
   AfastamentoProvidencia,
   AfastamentoResumo,
   AfastamentoStatus,
+  AssinarDocumentoDigitalInput,
   DevolutivaAlert,
   EmitirDevolutivaInput,
+  GerarDocumentoDigitalInput,
   ListServidoresForAfastamentoParams,
   RegistrarAnaliseInput,
   RegistrarProvidenciaInput,
   ResponderComplementacaoInput,
   ServidorOption,
+  ValidacaoDocumentoDigital,
 } from "../types/afastamentos.types";
 
 interface AfastamentoRow {
@@ -31,6 +35,33 @@ interface AfastamentoRow {
   documento_origem_url?: string | null;
   documento_origem_tipo: string | null;
   iniciado_em: string;
+}
+
+interface DocumentoDigitalRow {
+  id: string;
+  afastamento_id: string;
+  tipo: string;
+  titulo: string;
+  protocolo: string;
+  status: AfastamentoDocumentoDigital["status"];
+  conteudo: Record<string, unknown>;
+  hash_sha256: string;
+  qr_payload: string;
+  criado_por: string | null;
+  criado_em: string;
+  assinado_em: string | null;
+}
+
+interface AssinaturaDigitalRow {
+  id: string;
+  documento_id: string;
+  assinante_id: string;
+  assinante_nome: string;
+  assinante_email: string | null;
+  perfil_assinante: string | null;
+  assinado_em: string;
+  ip: string | null;
+  user_agent: string | null;
 }
 
 const documentosBucket = "afastamentos-documentos";
@@ -111,6 +142,64 @@ function mapAfastamento(
     documentoOrigemTipo: row.documento_origem_tipo,
     iniciadoEm: row.iniciado_em,
   };
+}
+
+function mapDocumentoDigital(
+  row: DocumentoDigitalRow,
+  assinaturas: AssinaturaDigitalRow[],
+): AfastamentoDocumentoDigital {
+  return {
+    id: row.id,
+    tipo: row.tipo,
+    titulo: row.titulo,
+    protocolo: row.protocolo,
+    status: row.status,
+    conteudo: row.conteudo,
+    hashSha256: row.hash_sha256,
+    qrPayload: row.qr_payload,
+    criadoPor: row.criado_por,
+    criadoEm: row.criado_em,
+    assinadoEm: row.assinado_em,
+    assinaturas: assinaturas.map((assinatura) => ({
+      id: assinatura.id,
+      assinanteId: assinatura.assinante_id,
+      assinanteNome: assinatura.assinante_nome,
+      assinanteEmail: assinatura.assinante_email,
+      perfilAssinante: assinatura.perfil_assinante,
+      assinadoEm: assinatura.assinado_em,
+      ip: assinatura.ip,
+      userAgent: assinatura.user_agent,
+    })),
+  };
+}
+
+export async function createSha256Hash(value: unknown) {
+  const payload = typeof value === "string" ? value : JSON.stringify(value);
+  const encoded = new TextEncoder().encode(payload);
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
+
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function confirmarSenhaUsuario(password: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    throw new Error("Sessao expirada. Acesse novamente para assinar.");
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password,
+  });
+
+  if (error) {
+    throw new Error("Senha invalida. Confira sua senha e tente novamente.");
+  }
 }
 
 async function getServidoresById(ids: string[]) {
@@ -303,6 +392,7 @@ export async function getAfastamentoDetalhe(
     complementacoesResult,
     devolutivasResult,
     providenciasResult,
+    documentosDigitaisResult,
   ] = await Promise.all([
     supabase
       .schema("afastamentos")
@@ -332,12 +422,47 @@ export async function getAfastamentoDetalhe(
       .select("id, descricao, registrada_em")
       .eq("afastamento_id", id)
       .order("registrada_em", { ascending: false }),
+    supabase
+      .schema("afastamentos")
+      .from("documentos_digitais")
+      .select(
+        "id, afastamento_id, tipo, titulo, protocolo, status, conteudo, hash_sha256, qr_payload, criado_por, criado_em, assinado_em",
+      )
+      .eq("afastamento_id", id)
+      .order("criado_em", { ascending: false }),
   ]);
 
   if (movimentacoesResult.error) throw movimentacoesResult.error;
   if (complementacoesResult.error) throw complementacoesResult.error;
   if (devolutivasResult.error) throw devolutivasResult.error;
   if (providenciasResult.error) throw providenciasResult.error;
+  if (documentosDigitaisResult.error) throw documentosDigitaisResult.error;
+
+  const documentoIds = (documentosDigitaisResult.data ?? []).map(
+    (documento) => documento.id,
+  );
+  const assinaturasResult =
+    documentoIds.length > 0
+      ? await supabase
+          .schema("afastamentos")
+          .from("assinaturas_digitais")
+          .select(
+            "id, documento_id, assinante_id, assinante_nome, assinante_email, perfil_assinante, assinado_em, ip, user_agent",
+          )
+          .in("documento_id", documentoIds)
+          .order("assinado_em", { ascending: false })
+      : { data: [], error: null };
+
+  if (assinaturasResult.error) throw assinaturasResult.error;
+
+  const assinaturasByDocumento = new Map<string, AssinaturaDigitalRow[]>();
+
+  for (const assinatura of (assinaturasResult.data ??
+    []) as AssinaturaDigitalRow[]) {
+    const current = assinaturasByDocumento.get(assinatura.documento_id) ?? [];
+    current.push(assinatura);
+    assinaturasByDocumento.set(assinatura.documento_id, current);
+  }
 
   return {
     ...resumo,
@@ -373,7 +498,63 @@ export async function getAfastamentoDetalhe(
       descricao: item.descricao,
       registradaEm: item.registrada_em,
     })) satisfies AfastamentoProvidencia[],
+    documentosDigitais: (
+      (documentosDigitaisResult.data ?? []) as DocumentoDigitalRow[]
+    ).map((documento) =>
+      mapDocumentoDigital(
+        documento,
+        assinaturasByDocumento.get(documento.id) ?? [],
+      ),
+    ),
   };
+}
+
+export async function gerarDocumentoDigital(
+  input: GerarDocumentoDigitalInput,
+) {
+  const { data, error } = await supabase.rpc(
+    "gerar_documento_digital_afastamento",
+    {
+      target_afastamento_id: input.afastamentoId,
+      tipo: input.tipo,
+      titulo: input.titulo,
+      conteudo: input.conteudo,
+      hash_sha256: input.hashSha256,
+    },
+  );
+
+  if (error) throw error;
+
+  return data as string;
+}
+
+export async function assinarDocumentoDigital(
+  input: AssinarDocumentoDigitalInput,
+) {
+  await confirmarSenhaUsuario(input.password);
+
+  const { error } = await supabase.rpc("assinar_documento_digital_afastamento", {
+    target_documento_id: input.documentoId,
+    perfil_assinante: input.perfilAssinante ?? null,
+    user_agent: navigator.userAgent,
+  });
+
+  if (error) throw error;
+}
+
+export async function validarDocumentoDigital(
+  protocolo: string,
+): Promise<ValidacaoDocumentoDigital> {
+  const { data, error } = await supabase.rpc(
+    "validar_documento_digital_afastamento",
+    {
+      target_protocolo: protocolo,
+    },
+  );
+
+  if (error) throw error;
+
+  return data as ValidacaoDocumentoDigital;
 }
 
 export async function registrarAnalise(input: RegistrarAnaliseInput) {

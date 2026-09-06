@@ -10,6 +10,7 @@ import {
   statusLabels,
 } from "../utils/afastamentos.utils";
 import { AfastamentoDocumentoPreview } from "./AfastamentoDocumentoPreview";
+import { AfastamentoCofreDigital } from "./AfastamentoCofreDigital";
 import { AnaliseAfastamentoForm } from "./AnaliseAfastamentoForm";
 import { ComplementacaoAfastamentoForm } from "./ComplementacaoAfastamentoForm";
 import { DevolutivaAfastamentoForm } from "./DevolutivaAfastamentoForm";
@@ -23,6 +24,10 @@ interface AfastamentoDetailDialogProps {
   canIssueReturn: boolean;
   canRegisterProvidence: boolean;
   canViewDocument: boolean;
+  canGenerateDocument: boolean;
+  canSignDocument: boolean;
+  isGeneratingDocument: boolean;
+  isSigningDocument: boolean;
   analise: string;
   proximaAcao: RegistrarAnaliseInput["proximaAcao"];
   complemento: string;
@@ -46,6 +51,8 @@ interface AfastamentoDetailDialogProps {
   onEncaminharRhChange: (value: boolean) => void;
   onProvidenciaChange: (value: string) => void;
   onConcluirChange: (value: boolean) => void;
+  onGenerateDocument: (tipo: "devolutiva_formal") => void;
+  onSignDocument: (documentoId: string, password: string) => void;
   onSubmitAnalise: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
   onSubmitComplementacao: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
   onSubmitDevolutiva: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
@@ -61,6 +68,8 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
     canIssueReturn,
     canRegisterProvidence,
     canViewDocument,
+    canGenerateDocument,
+    canSignDocument,
     onClose,
   } = props;
   return (
@@ -114,6 +123,15 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
                   canViewDocument={canViewDocument}
                 />
               </section>
+              <AfastamentoCofreDigital
+                detalhe={detalhe}
+                canGenerateDocument={canGenerateDocument}
+                canSignDocument={canSignDocument}
+                isGenerating={props.isGeneratingDocument}
+                isSigning={props.isSigningDocument}
+                onGenerateDocument={props.onGenerateDocument}
+                onSignDocument={props.onSignDocument}
+              />
               <div className="grid gap-4">
                 {canAnalyze && (
                   <AnaliseAfastamentoForm
