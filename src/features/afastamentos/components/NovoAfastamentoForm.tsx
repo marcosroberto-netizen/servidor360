@@ -28,11 +28,12 @@ export function NovoAfastamentoForm({
             </h3>
             <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(240px,1fr)_160px_160px]">
               <label>
-                <FieldLabel>Tipo</FieldLabel>
+                <FieldLabel required>Tipo</FieldLabel>
                 <select
                   value={form.tipo}
                   onChange={(event) => onFieldChange("tipo", event.target.value)}
                   className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm"
+                  required
                 >
                   <option>Atestado medico</option>
                   <option>Licenca medica</option>
@@ -42,7 +43,7 @@ export function NovoAfastamentoForm({
                 </select>
               </label>
               <label>
-                <FieldLabel>Inicio</FieldLabel>
+                <FieldLabel required>Inicio</FieldLabel>
                 <input
                   type="date"
                   value={form.dataInicio}
@@ -50,10 +51,11 @@ export function NovoAfastamentoForm({
                     onFieldChange("dataInicio", event.target.value)
                   }
                   className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
+                  required
                 />
               </label>
               <label>
-                <FieldLabel>Fim</FieldLabel>
+                <FieldLabel required>Fim</FieldLabel>
                 <input
                   type="date"
                   value={form.dataFim}
@@ -61,6 +63,7 @@ export function NovoAfastamentoForm({
                     onFieldChange("dataFim", event.target.value)
                   }
                   className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm"
+                  required
                 />
               </label>
             </div>
@@ -103,7 +106,7 @@ export function NovoAfastamentoForm({
             </h3>
             <div className="mt-3 grid gap-4">
               <label>
-                <FieldLabel>Motivo</FieldLabel>
+                <FieldLabel required>Motivo</FieldLabel>
                 <textarea
                   value={form.motivo}
                   onChange={(event) =>
@@ -111,6 +114,7 @@ export function NovoAfastamentoForm({
                   }
                   rows={4}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  required
                 />
               </label>
               <label>
