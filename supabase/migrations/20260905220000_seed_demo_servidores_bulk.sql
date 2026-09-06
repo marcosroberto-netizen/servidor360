@@ -67,7 +67,7 @@ nomes as (
 demo_servidores as (
   select
     'EDU-' || lpad((20000 + gs.numero)::text, 5, '0') as matricula,
-    nomes.nome || ' ' || lpad(gs.rodada::text, 2, '0') as nome,
+    nomes.nome as nome,
     lpad((70000000000 + gs.numero)::text, 11, '0') as cpf,
     nomes.cargo,
     date '2014-01-01' + ((gs.numero * 23) % 3650) as data_admissao,
