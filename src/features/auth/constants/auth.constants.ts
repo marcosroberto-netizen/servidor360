@@ -23,6 +23,7 @@ export const PERMISSIONS = {
   AFASTAMENTOS_WRITE: 'afastamentos:write',
   AFASTAMENTOS_DELETE: 'afastamentos:delete',
   AFASTAMENTOS_CREATE: 'afastamentos:create',
+  AFASTAMENTOS_VISUALIZAR_DOCUMENTO: 'afastamentos:visualizar_documento',
   AFASTAMENTOS_COMPLEMENTAR: 'afastamentos:complementar',
   AFASTAMENTOS_SOLICITAR_COMPLEMENTACAO: 'afastamentos:solicitar_complementacao',
   AFASTAMENTOS_ENCAMINHAR_AVALIACAO: 'afastamentos:encaminhar_avaliacao',

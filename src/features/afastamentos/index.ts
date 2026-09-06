@@ -1,2 +1,37 @@
-export * from './services/useAfastamentos'
-export * from './types/afastamentos.types'
+export { default as AfastamentosPage } from "./pages/AfastamentosPage";
+export {
+  useAfastamentoDetalhe,
+  useAfastamentos,
+  useCreateAfastamento,
+  useDevolutivaAlerts,
+  useEmitirDevolutiva,
+  useRegistrarAnalise,
+  useRegistrarProvidencia,
+  useResponderComplementacao,
+  useServidoresForAfastamento,
+} from "./hooks/useAfastamentos";
+export { AFASTAMENTOS_PERMISSIONS } from "./constants/afastamentos.constants";
+export type {
+  AfastamentoComplementacao,
+  AfastamentoDetalhe,
+  AfastamentoDevolutiva,
+  AfastamentoFormData,
+  AfastamentoMovimentacao,
+  AfastamentoProvidencia,
+  AfastamentoResumo,
+  AfastamentosAuthorization,
+  AfastamentosPageProps,
+  AfastamentoStatus,
+  DevolutivaAlert,
+  DevolutivaResultado,
+  EmitirDevolutivaInput,
+  ListServidoresForAfastamentoParams,
+  NovoAfastamentoFormFields,
+  NovoAfastamentoFormProps,
+  NovoAfastamentoModalProps,
+  NovoAfastamentoServidorListProps,
+  RegistrarAnaliseInput,
+  RegistrarProvidenciaInput,
+  ResponderComplementacaoInput,
+  ServidorOption,
+} from "./types/afastamentos.types";

@@ -18,5 +18,19 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/features/*/*'],
+              message:
+                'Importe features apenas pela API publica em "@/features/[feature]".',
+            },
+          ],
+        },
+      ],
+    },
   },
 ])
