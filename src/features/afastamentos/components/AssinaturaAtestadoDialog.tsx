@@ -1,4 +1,4 @@
-import { FileSignature, Send, ShieldCheck, X } from "lucide-react";
+import { FileSignature, ShieldCheck, X } from "lucide-react";
 import type { ServidorOption } from "../types/afastamentos.types";
 
 interface AssinaturaAtestadoDialogProps {
@@ -9,7 +9,6 @@ interface AssinaturaAtestadoDialogProps {
   onSenhaChange: (value: string) => void;
   onCancel: () => void;
   onSubmitSigned: () => void;
-  onSubmitUnsigned: () => void;
 }
 
 export function AssinaturaAtestadoDialog({
@@ -20,7 +19,6 @@ export function AssinaturaAtestadoDialog({
   onSenhaChange,
   onCancel,
   onSubmitSigned,
-  onSubmitUnsigned,
 }: AssinaturaAtestadoDialogProps) {
   if (!open) return null;
 
@@ -45,8 +43,8 @@ export function AssinaturaAtestadoDialog({
               </h2>
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 {servidor
-                  ? `Antes de enviar para analise, voce pode assinar o atestado de ${servidor.nome}.`
-                  : "Antes de enviar para analise, voce pode assinar este atestado."}
+                  ? `Antes de enviar para analise, assine o atestado de ${servidor.nome}.`
+                  : "Antes de enviar para analise, assine este atestado."}
               </p>
             </div>
           </div>
@@ -90,15 +88,6 @@ export function AssinaturaAtestadoDialog({
         </div>
 
         <footer className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={onSubmitUnsigned}
-            disabled={isLoading}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" aria-hidden="true" />
-            Enviar sem assinatura
-          </button>
           <button
             type="button"
             onClick={onSubmitSigned}

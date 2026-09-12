@@ -10,14 +10,14 @@ A organização separa os casos de uso pertencentes ao **núcleo global da plata
 casos-de-uso/
 ├── README.md
 ├── global/
-│   ├── 01-ATORES-GLOBAIS.md
-│   ├── 02-DIAGRAMA-CASOS-DE-USO-GLOBAL.md
-│   └── 03-CASOS-DE-USO-GLOBAIS.md
+│   ├── 01-atores-globais.md
+│   ├── 02-diagrama-casos-de-uso-global.md
+│   └── 03-casos-de-uso-globais.md
 └── modulos/
     └── afastamentos/
-        ├── 01-ATORES-AFASTAMENTOS.md
-        ├── 02-DIAGRAMA-CASOS-DE-USO-AFASTAMENTOS.md
-        └── 03-CASOS-DE-USO-AFASTAMENTOS.md
+        ├── 01-atores-afastamentos.md
+        ├── 02-diagrama-casos-de-uso-afastamentos.md
+        └── 03-casos-de-uso-afastamentos.md
 ```
 
 ## Regra de Organização
@@ -54,6 +54,8 @@ O módulo de **Afastamentos** contém:
 - registrar providência administrativa;
 - concluir processo;
 - consultar linha do tempo.
+
+Consulte também o [status e checklist do projeto](../01-status/README.md) para acompanhar o que já foi implementado em cada fluxo.
 
 ## Novos Módulos
 

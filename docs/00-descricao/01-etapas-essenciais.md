@@ -1,208 +1,134 @@
-# Servidor 360 --- Etapas Essenciais do Projeto
+# Servidor 360 — Etapas Essenciais do Projeto
 
-Para otimizar o tempo disponível, a documentação do **Servidor 360**
-será concentrada apenas nas etapas essenciais para análise, modelagem e
-início do desenvolvimento.
+Este documento define a ordem recomendada para leitura, manutenção e evolução da documentação do **Servidor 360**.
 
 ## Estrutura
 
-``` text
-Servidor-360/
-│
+```text
+servidor360/
 ├── docs/
-│   ├── 01-VISAO-DO-PRODUTO.md
-│   ├── 02-REQUISITOS.md
-│   ├── 03-CASOS-DE-USO.md
-│   ├── 04-DIAGRAMA-DE-CLASSES.md
-│   ├── 05-MODELO-DE-DADOS.md
-│   └── 06-ARQUITETURA.md
-│
+│   ├── 00-descricao/
+│   ├── 01-status/
+│   ├── 02-requisitos/
+│   ├── 03-casos-de-uso/
+│   └── 04-arquitetura/
 └── README.md
 ```
 
 ## 1. Visão do Produto
 
-**Arquivo:** `01-VISAO-DO-PRODUTO.md`
+**Arquivos:** `docs/00-descricao/`
 
 Descrever de forma objetiva:
 
--   problema que o Servidor 360 pretende resolver;
--   objetivo do sistema;
--   público-alvo;
--   funcionamento geral do portal;
--   prontuário funcional digital;
--   controle de acesso por perfil;
--   fluxo inicial de atestados, CAS e RH;
--   escopo inicial do produto.
+- problema que o Servidor 360 pretende resolver;
+- objetivo do sistema;
+- público-alvo;
+- funcionamento geral do portal;
+- prontuário funcional digital;
+- controle de acesso por perfil;
+- fluxo inicial de afastamentos, CAS e RH;
+- escopo inicial do produto.
 
-**Resultado:** definição clara do que é o Servidor 360 e qual problema
-ele resolve.
+**Resultado:** definição clara do que é o Servidor 360 e qual problema ele resolve.
 
-------------------------------------------------------------------------
+## 2. Status e Checklists
 
-## 2. Requisitos
+**Arquivo:** `docs/01-status/README.md`
 
-**Arquivo:** `02-REQUISITOS.md`
+Registrar, por módulo:
+
+- o que já foi implementado;
+- o que falta para concluir;
+- pontos de validação antes de fechar o MVP.
+
+**Resultado:** visão prática e navegável do andamento do projeto.
+
+## 3. Requisitos
+
+**Arquivos:** `docs/02-requisitos/`
 
 Centralizar em um único documento:
 
--   requisitos funcionais;
--   requisitos não funcionais;
--   regras de negócio;
--   perfis de usuários;
--   permissões de acesso;
--   restrições importantes de segurança e privacidade.
+- requisitos funcionais;
+- requisitos não funcionais;
+- regras de negócio;
+- perfis de usuários;
+- permissões de acesso;
+- restrições importantes de segurança e privacidade.
 
-**Resultado:** definição objetiva do que o sistema deverá fazer e das
-principais regras que deverão ser respeitadas.
+**Resultado:** definição objetiva do que o sistema deverá fazer e das principais regras que deverão ser respeitadas.
 
-------------------------------------------------------------------------
+## 4. Casos de Uso
 
-## 3. Casos de Uso
-
-**Arquivo:** `03-CASOS-DE-USO.md`
+**Arquivos:** `docs/03-casos-de-uso/`
 
 Definir os principais atores e suas ações no sistema.
 
 Principais atores:
 
--   Diretor/Unidade Escolar;
--   Educação;
--   CAS;
--   Médico;
--   RH;
--   Administrador.
+- Diretor/Unidade Escolar;
+- Educação;
+- CAS;
+- Médico/Profissional autorizado;
+- RH;
+- Administrador.
 
 Principais ações:
 
--   autenticar no portal;
--   localizar servidor;
--   consultar informações autorizadas;
--   registrar atestado;
--   acompanhar processo;
--   analisar documentação;
--   solicitar complementação;
--   emitir devolutiva;
--   realizar providência administrativa;
--   consultar histórico.
+- autenticar no portal;
+- localizar servidor;
+- consultar informações autorizadas;
+- registrar afastamento;
+- acompanhar processo;
+- analisar documentação;
+- solicitar complementação;
+- emitir devolutiva;
+- realizar providência administrativa;
+- consultar histórico.
 
-Incluir o **Diagrama de Casos de Uso UML**.
+**Resultado:** visão clara de quem utiliza o sistema e quais operações cada perfil realiza.
 
-**Resultado:** visão clara de quem utiliza o sistema e quais operações
-cada perfil realiza.
+## 5. Arquitetura
 
-------------------------------------------------------------------------
-
-## 4. Diagrama de Classes
-
-**Arquivo:** `04-DIAGRAMA-DE-CLASSES.md`
-
-Modelar os principais elementos do sistema e seus relacionamentos.
-
-Exemplos iniciais:
-
--   Usuário;
--   Perfil;
--   Servidor;
--   Unidade;
--   Prontuário;
--   Documento;
--   Atestado;
--   Processo;
--   Parecer/Devolutiva;
--   Movimentação.
-
-Incluir o **Diagrama de Classes UML**.
-
-**Resultado:** representação da estrutura conceitual do software antes
-da implementação.
-
-------------------------------------------------------------------------
-
-## 5. Modelo de Dados
-
-**Arquivo:** `05-MODELO-DE-DADOS.md`
-
-Definir como as informações principais serão organizadas e relacionadas.
-
-Incluir:
-
--   entidades;
--   atributos principais;
--   identificadores;
--   relacionamentos;
--   chaves primárias e estrangeiras;
--   **Diagrama Entidade-Relacionamento (DER)**.
-
-**Resultado:** modelo necessário para criação e organização do banco de
-dados.
-
-------------------------------------------------------------------------
-
-## 6. Arquitetura
-
-**Arquivo:** `06-ARQUITETURA.md`
+**Arquivos:** `docs/04-arquitetura/`
 
 Definir de forma simples a organização técnica do sistema:
 
-``` text
+```text
 USUÁRIO
    ↓
-FRONT-END
+FRONTEND REACT
    ↓
-BACK-END / API
+SUPABASE AUTH / RPC / STORAGE
    ↓
-BANCO DE DADOS
+POSTGRESQL COM RLS
 ```
 
 Descrever brevemente:
 
--   responsabilidade do front-end;
--   responsabilidade do back-end;
--   comunicação entre as camadas;
--   banco de dados;
--   autenticação e autorização;
--   armazenamento de documentos;
--   proteção das informações funcionais e médicas.
+- responsabilidade do frontend;
+- comunicação com Supabase;
+- banco de dados por schemas;
+- autenticação e autorização;
+- armazenamento de documentos;
+- proteção das informações funcionais e ocupacionais.
 
-**Resultado:** visão técnica necessária para iniciar o desenvolvimento
-de forma organizada.
+**Resultado:** visão técnica necessária para manter o desenvolvimento organizado.
 
-------------------------------------------------------------------------
+## Sequência de Manutenção
 
-# Sequência de Execução
+Ao alterar o projeto, siga esta ordem:
 
-A ordem de trabalho será:
-
-**1. Visão do Produto**\
-↓\
-**2. Requisitos**\
-↓\
-**3. Casos de Uso + Diagrama**\
-↓\
-**4. Diagrama de Classes**\
-↓\
-**5. Modelo de Dados + DER**\
-↓\
-**6. Arquitetura**\
-↓\
-**7. Desenvolvimento**
-
-Após essas seis etapas, a prioridade passa a ser a implementação do
-software.
-
-Documentações adicionais poderão ser produzidas posteriormente somente
-se houver necessidade ou disponibilidade de tempo.
-
-------------------------------------------------------------------------
+1. Atualize ou confirme o requisito afetado.
+2. Atualize o checklist do módulo.
+3. Atualize casos de uso se o fluxo do usuário mudar.
+4. Atualize arquitetura/modelo de dados se houver tabela, RPC, permissão, rota ou regra nova.
+5. Implemente ou ajuste o código.
+6. Rode validações (`pnpm lint` e `pnpm build`) quando aplicável.
 
 ## Objetivo
 
-A documentação deverá ser **curta, objetiva e suficiente para orientar o
-desenvolvimento**.
+A documentação deve ser curta, objetiva e suficiente para orientar o desenvolvimento sem virar um segundo sistema paralelo.
 
-O foco principal é evitar excesso de documentação e garantir tempo para
-construir um MVP funcional do **Servidor 360**, demonstrando:
-
-**Portal + Controle de Acesso + Prontuário Digital + Atestados + CAS +
-Devolutiva + RH + Histórico.**
+O foco do MVP é demonstrar: **portal + controle de acesso + base de servidores/prontuário + afastamentos + CAS + devolutiva + RH + histórico + documento digital assinado.**

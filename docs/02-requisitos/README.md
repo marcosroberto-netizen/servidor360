@@ -10,14 +10,10 @@ Esta pasta concentra a documentação de requisitos do **Servidor 360**, separan
 requisitos/
 ├── README.md
 ├── global/
-│   └── 01-REQUISITOS-GLOBAIS.md
+│   └── 01-requisitos-globais.md
 └── modulos/
-    ├── afastamentos/
-    │   └── 01-REQUISITOS-AFASTAMENTOS.md
-    ├── autenticacao/
-    │   └── 01-REQUISITOS-AUTENTICACAO.md
-    └── autorizacao/
-        └── 01-REQUISITOS-AUTORIZACAO.md
+    └── afastamentos/
+        └── 01-requisitos-afastamentos.md
 ```
 
 ## Princípio de organização
@@ -52,6 +48,8 @@ O primeiro módulo é **Afastamentos**, responsável por:
 - devolutiva;
 - providência do RH;
 - conclusão.
+
+Consulte também o [status e checklist do projeto](../01-status/README.md) para diferenciar requisitos planejados do que já está implementado.
 
 ## Regra para novos módulos
 

@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { FileUp, Loader2 } from "lucide-react";
 import type { NovoAfastamentoFormProps } from "../types/afastamentos.types";
 import { EmptyState, FieldLabel } from "./AfastamentoFormPrimitives";
@@ -14,6 +16,18 @@ export function NovoAfastamentoForm({
   onDocumentoChange,
   onSubmit,
 }: NovoAfastamentoFormProps) {
+  const documentoInputRef = useRef<HTMLInputElement>(null);
+  const [isFilePickerOpening, setIsFilePickerOpening] = useState(false);
+  const isDocumentoButtonBusy = isFilePickerOpening || isDocumentoLoading;
+
+  const handleDocumentoButtonClick = () => {
+    if (isDocumentoButtonBusy) return;
+
+    flushSync(() => setIsFilePickerOpening(true));
+    documentoInputRef.current?.click();
+    window.setTimeout(() => setIsFilePickerOpening(false), 1500);
+  };
+
   return (
     <form onSubmit={onSubmit} className="min-h-0 overflow-y-auto p-5">
       {!selectedServidor ? (
@@ -74,25 +88,34 @@ export function NovoAfastamentoForm({
             </h3>
             <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
               <input
+                ref={documentoInputRef}
                 id="documento-afastamento"
                 type="file"
                 accept="application/pdf,image/png,image/jpeg,image/webp"
-                onChange={(event) =>
-                  onDocumentoChange(event.target.files?.[0] ?? null)
-                }
+                onChange={(event) => {
+                  setIsFilePickerOpening(false);
+                  onDocumentoChange(event.target.files?.[0] ?? null);
+                }}
                 className="sr-only"
               />
-              <label
-                htmlFor="documento-afastamento"
-                className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
+              <button
+                type="button"
+                onClick={handleDocumentoButtonClick}
+                disabled={isDocumentoButtonBusy}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-600"
+                aria-controls="documento-afastamento"
               >
-                {isDocumentoLoading ? (
+                {isDocumentoButtonBusy ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
                   <FileUp className="h-4 w-4" aria-hidden="true" />
                 )}
-                {isDocumentoLoading ? "Carregando..." : "Carregar atestado"}
-              </label>
+                {isFilePickerOpening
+                  ? "Abrindo explorador..."
+                  : isDocumentoLoading
+                    ? "Carregando..."
+                    : "Carregar atestado"}
+              </button>
               <p className="mt-3 text-sm text-slate-600">
                 {form.documentoArquivo
                   ? form.documentoArquivo.name

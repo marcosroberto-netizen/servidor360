@@ -51,8 +51,7 @@ export function NovoAfastamentoModal({
           isLoading={isPending}
           onSenhaChange={setAssinaturaSenha}
           onCancel={() => setShowSignatureDialog(false)}
-          onSubmitSigned={() => submitAfastamento(true)}
-          onSubmitUnsigned={() => submitAfastamento(false)}
+          onSubmitSigned={submitAfastamento}
         />
         <FeedbackDialog
           open={isPending}

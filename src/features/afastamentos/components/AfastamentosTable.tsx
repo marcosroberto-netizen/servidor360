@@ -1,6 +1,26 @@
 import { useMemo, useState } from "react";
-import type { AfastamentoResumo } from "../types/afastamentos.types";
-import { formatDate, normalize, statusLabels } from "../utils/afastamentos.utils";
+import {
+  BadgeCheck,
+  CheckCircle2,
+  CircleDashed,
+  ClipboardCheck,
+  ClipboardList,
+  Clock3,
+  FileClock,
+  SearchCheck,
+  Send,
+  TriangleAlert,
+} from "lucide-react";
+import type {
+  AfastamentoResumo,
+  AfastamentoStatus,
+} from "../types/afastamentos.types";
+import {
+  formatDate,
+  normalize,
+  statusBadgeClasses,
+  statusLabels,
+} from "../utils/afastamentos.utils";
 
 interface AfastamentosTableProps {
   items: AfastamentoResumo[];
@@ -74,6 +94,19 @@ const columns: ColumnDefinition[] = [
     getValue: (item) => statusLabels[item.status],
   },
 ];
+
+const statusIcons: Record<AfastamentoStatus, typeof CircleDashed> = {
+  rascunho: CircleDashed,
+  registrado: ClipboardCheck,
+  encaminhado: Send,
+  aguardando_analise: Clock3,
+  em_analise: SearchCheck,
+  aguardando_complementacao: TriangleAlert,
+  aguardando_avaliacao: ClipboardList,
+  avaliado: BadgeCheck,
+  aguardando_rh: FileClock,
+  concluido: CheckCircle2,
+};
 
 function EmptyState({ children }: { children: string }) {
   return (
@@ -421,9 +454,7 @@ export function AfastamentosTable({
                     className="border-b border-slate-100 px-3 py-2 text-slate-700"
                   >
                     {column.key === "status" ? (
-                      <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-                        {column.getValue(item)}
-                      </span>
+                      <StatusBadge status={item.status} />
                     ) : (
                       <span className="line-clamp-2">{column.getValue(item)}</span>
                     )}
@@ -521,5 +552,18 @@ export function AfastamentosTable({
         </div>
       </div>
     </section>
+  );
+}
+
+function StatusBadge({ status }: { status: AfastamentoStatus }) {
+  const Icon = statusIcons[status];
+
+  return (
+    <span
+      className={`inline-flex min-h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold leading-none ${statusBadgeClasses[status]}`}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {statusLabels[status]}
+    </span>
   );
 }

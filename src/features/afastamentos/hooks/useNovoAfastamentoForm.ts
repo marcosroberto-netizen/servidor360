@@ -110,76 +110,70 @@ export function useNovoAfastamentoForm(
     setShowSignatureDialog(true);
   };
 
-  const submitAfastamento = async (shouldSign: boolean) => {
+  const submitAfastamento = async () => {
     if (!selectedServidor || !canSubmit) return;
-    if (shouldSign && !assinaturaSenha.trim()) return;
+    if (!assinaturaSenha.trim()) return;
     setShowSignatureDialog(false);
 
     try {
       setIsSigningAtestado(true);
 
-      if (shouldSign) {
-        await confirmarSenhaUsuario(assinaturaSenha);
-      }
+      await confirmarSenhaUsuario(assinaturaSenha);
 
       const afastamentoId = await createAfastamento.mutateAsync({
         servidorId: selectedServidor.id,
         ...form,
       });
 
-      if (shouldSign) {
-        const conteudo = {
-          tipoDocumento: "atestado_enviado",
-          processo: {
-            id: afastamentoId,
-            tipo: form.tipo,
-            periodo: {
-              inicio: form.dataInicio,
-              fim: form.dataFim,
-            },
-            motivo: form.motivo,
-            observacoes: form.observacoes,
+      const conteudo = {
+        tipoDocumento: "atestado_enviado",
+        processo: {
+          id: afastamentoId,
+          tipo: form.tipo,
+          periodo: {
+            inicio: form.dataInicio,
+            fim: form.dataFim,
           },
-          servidor: {
-            id: selectedServidor.id,
-            nome: selectedServidor.nome,
-            matricula: selectedServidor.matricula,
-            cargo: selectedServidor.cargo,
-            unidade: selectedServidor.unidadeNome,
-          },
-          documentoAnexado: form.documentoArquivo
-            ? {
-                nome: form.documentoArquivo.name,
-                tipo: form.documentoArquivo.type,
-                tamanhoBytes: form.documentoArquivo.size,
-              }
-            : null,
-          geradoEm: new Date().toISOString(),
-        };
-        const hashSha256 = await createSha256Hash(conteudo);
-        const documentoId = await gerarDocumentoDigital({
-          afastamentoId,
-          tipo: "atestado_enviado",
-          titulo: "Atestado enviado para analise",
-          conteudo,
-          hashSha256,
-        });
+          motivo: form.motivo,
+          observacoes: form.observacoes,
+        },
+        servidor: {
+          id: selectedServidor.id,
+          nome: selectedServidor.nome,
+          matricula: selectedServidor.matricula,
+          cargo: selectedServidor.cargo,
+          unidade: selectedServidor.unidadeNome,
+        },
+        documentoAnexado: form.documentoArquivo
+          ? {
+              nome: form.documentoArquivo.name,
+              tipo: form.documentoArquivo.type,
+              tamanhoBytes: form.documentoArquivo.size,
+            }
+          : null,
+        geradoEm: new Date().toISOString(),
+      };
+      const hashSha256 = await createSha256Hash(conteudo);
+      const documentoId = await gerarDocumentoDigital({
+        afastamentoId,
+        tipo: "atestado_enviado",
+        titulo: "Atestado enviado para analise",
+        conteudo,
+        hashSha256,
+      });
 
-        await assinarDocumentoDigital({
-          documentoId,
-          password: assinaturaSenha,
-          perfilAssinante: "solicitante",
-        });
-      }
+      await assinarDocumentoDigital({
+        documentoId,
+        password: assinaturaSenha,
+        perfilAssinante: "solicitante",
+      });
 
       await queryClient.invalidateQueries({ queryKey: afastamentosKeys.listas() });
       await queryClient.invalidateQueries({
         queryKey: afastamentosKeys.detailBase(afastamentoId),
       });
       setSuccessMessage(
-        shouldSign
-          ? "Afastamento registrado e atestado assinado com sucesso."
-          : "Afastamento registrado com sucesso.",
+        "Afastamento registrado e atestado assinado com sucesso.",
       );
       setAssinaturaSenha("");
     } catch (error) {

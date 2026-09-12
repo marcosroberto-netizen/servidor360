@@ -16,27 +16,27 @@ Cada usuário acessa o mesmo portal, mas visualiza somente os módulos, informa�
 
 ## 🚀 Tecnologias
 
-Este projeto utiliza o stack tecnológico React definido nas regras globais:
+Este projeto utiliza a stack abaixo, conforme o `package.json` atual:
 
-- **Framework**: React 18 + TypeScript 5
-- **Build**: Vite 6
-- **Estado Global (Client)**: Zustand
+- **Framework**: React 19 + TypeScript 6
+- **Build**: Vite 8
+- **Backend**: Supabase Auth, PostgreSQL, RLS e Storage
 - **Estado de Servidor**: TanStack Query
-- **UI Components**: shadcn/ui + Radix UI
 - **Formulários**: React Hook Form + Zod
 - **Roteamento**: React Router v7
-- **Testes**: Vitest + Testing Library
-- **Lint**: ESLint + eslint-plugin-boundaries
-- **Formatação**: Prettier
+- **UI**: Tailwind CSS + componentes próprios em `shared/components/ui`
+- **Lint**: ESLint
 
 ## 📚 Documentação
 
 A documentação completa do projeto está disponível na pasta [`docs/`](docs/):
 
 - [Documentação Oficial](docs/README.md) — Índice completo da documentação
-- [Descrição Geral](docs/00-descricao/Servidor_360_Descricao_Geral.md) — Visão do produto
-- [Requisitos Globais](docs/02-requisitos/global/01-REQUISITOS-GLOBAIS.md) — Requisitos do núcleo
-- [Casos de Uso](docs/03-casos-de-uso/global/03-CASOS-DE-USO-GLOBAIS.md) — Interações do sistema
+- [Status e Checklists](docs/01-status/README.md) — O que já foi feito e o que falta por módulo
+- [Descrição Geral](docs/00-descricao/02-descricao-geral.md) — Visão do produto
+- [Requisitos Globais](docs/02-requisitos/global/01-requisitos-globais.md) — Requisitos do núcleo
+- [Casos de Uso](docs/03-casos-de-uso/global/03-casos-de-uso-globais.md) — Interações do sistema
+- [Arquitetura](docs/04-arquitetura/README.md) — Organização técnica, dados e autorização
 
 ## 🏗️ Estrutura do Projeto
 
@@ -72,32 +72,32 @@ pnpm lint
 
 ## 📋 MVP
 
-O primeiro MVP validará:
-- Portal único
-- Autenticação
-- Controle de acesso
-- Cadastro e consulta de servidores
-- Prontuário funcional
-- Documentos
-- Histórico e rastreabilidade
-- Módulo de afastamentos
+O MVP atual está concentrado em:
+
+- Portal autenticado com acesso por permissões
+- RBAC com perfis, permissões, unidades e setores
+- Cadastro base de servidores e prontuários via Supabase
+- Módulo de afastamentos com criação, análise, complementação, devolutiva, providência e conclusão
+- Documentos de afastamento em Storage com política de acesso
+- Documento digital, assinatura eletrônica interna e validação por protocolo
 
 ## 🎓 Regras de Arquitetura
 
-Este projeto segue estritamente as regras definidas em [`.codeium/windsurf/memories/global_rules.md`](.codeium/windsurf/memories/global_rules.md), incluindo:
+Este projeto segue uma organização modular:
 
 - Isolamento de features (apenas exports via `index.ts`)
-- Separação clara entre server state (TanStack Query) e client state (Zustand)
+- Separação clara entre estado de servidor (TanStack Query) e estado local de UI
 - Componentes UI compartilhados em `shared/components/ui/`
 - Query key factories para consistência de cache
 - Lazy loading obrigatório para rotas
 - Validação de variáveis de ambiente com Zod
+- Schemas do banco separados por domínio: `app_auth`, `organizacional`, `servidores` e `afastamentos`
 
 ## 📝 Status
 
-- 🚧 **Em Desenvolvimento** — MVP em construção
-- 📖 **Documentação** — Requisitos e casos de uso definidos
-- 🏗️ **Arquitetura** — Estrutura técnica planejada
+- 🚧 **Em desenvolvimento** — MVP funcional em evolução
+- 📖 **Documentação** — Reorganizada com status/checklists por módulo
+- 🏗️ **Arquitetura** — Implementada com React, Supabase, RLS, Storage e RPCs
 
 ---
 

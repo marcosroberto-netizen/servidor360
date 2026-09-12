@@ -23,6 +23,20 @@ export const statusLabels: Record<AfastamentoStatus, string> = {
   aguardando_rh: "Aguardando RH",
   concluido: "Concluido",
 };
+
+export const statusBadgeClasses: Record<AfastamentoStatus, string> = {
+  rascunho: "border-slate-200 bg-slate-50 text-slate-700",
+  registrado: "border-sky-200 bg-sky-50 text-sky-800",
+  encaminhado: "border-indigo-200 bg-indigo-50 text-indigo-800",
+  aguardando_analise: "border-amber-200 bg-amber-50 text-amber-800",
+  em_analise: "border-blue-200 bg-blue-50 text-blue-800",
+  aguardando_complementacao: "border-orange-200 bg-orange-50 text-orange-800",
+  aguardando_avaliacao: "border-violet-200 bg-violet-50 text-violet-800",
+  avaliado: "border-teal-200 bg-teal-50 text-teal-800",
+  aguardando_rh: "border-cyan-200 bg-cyan-50 text-cyan-800",
+  concluido: "border-emerald-200 bg-emerald-50 text-emerald-800",
+};
+
 export const resultadoLabels: Record<DevolutivaResultado, string> = {
   apto: "Apto",
   inapto: "Inapto",
