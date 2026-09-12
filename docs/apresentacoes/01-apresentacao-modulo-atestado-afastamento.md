@@ -8,7 +8,7 @@ Primeira de quatro apresentações sobre o módulo de afastamento do Servidor360
 
 **Introdução**
 
-Olá. Meu nome é [seu nome] e vou apresentar o módulo de atestado do Servidor360.
+Olá. Meu nome é [seu nome] e vou apresentar o módulo de afastamentos do Servidor360.
 
 O Servidor360 centraliza a gestão de informações de servidores em um ambiente digital, seguro e organizado.
 
