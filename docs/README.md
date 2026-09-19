@@ -1,105 +1,32 @@
-# Servidor 360 — Documentação
+# Documentação do Servidor 360
 
-Bem-vindo à documentação oficial do **Servidor 360**, o portal central para gestão da vida funcional do servidor.
+Esta pasta contém a referência de manutenção do sistema. Cada documento tem um assunto próprio; confirme detalhes de implementação no código e nas migrations quando uma mudança puder alterar o comportamento descrito.
 
-## Índice da Documentação
+## Referência canônica
 
-A documentação está organizada em camadas progressivas, da visão do produto ao estado atual da implementação e aos detalhes técnicos.
+- [Arquitetura](architecture.md)
+- [Banco de dados](database.md)
+- [Triagem CAS de afastamentos](cas-triagem-afastamentos.md)
+- [Desenvolvimento](development.md)
+- [Deploy](deployment.md)
+- [Fluxos e status](flows.md)
+- [Decisões arquiteturais](decisions.md)
 
-### 00 — Descrição Geral
-Visão geral do produto, conceitos e escopo do projeto.
+## Material auxiliar
 
-- [Etapas Essenciais do Projeto](00-descricao/01-etapas-essenciais.md) — Sequência de trabalho e estrutura da documentação
-- [Descrição Geral do Servidor 360](00-descricao/02-descricao-geral.md) — Visão do produto, conceito do portal, prontuário funcional digital
-- [Módulo de Afastamentos](00-descricao/03-modulo-afastamentos.md) — Descrição específica do primeiro módulo
-- [Assinatura Eletrônica Interna](00-descricao/04-assinatura-eletronica-interna.md) — Cofre digital, assinatura interna e validação por protocolo
+- [Usuários de teste](usuarios-teste.md)
+- [Apresentações](apresentacoes/)
+- [Entregas acadêmicas](entregas/)
 
-### 01 — Status e Checklists
-Controle prático do que já está feito e do que falta para concluir.
+Apresentações, entregas e contas de teste apoiam validação ou demonstração. Eles não substituem os documentos canônicos.
 
-- [Status e Checklists por Módulo](01-status/README.md) — Núcleo, servidores, prontuários, documentos, afastamentos e indicadores
+## Atualizar a documentação
 
-### 02 — Requisitos
-Definição detalhada dos requisitos funcionais, não funcionais e regras de negócio.
+Atualize o documento correspondente quando mudar uma rota, permissão, fluxo, migration, RPC, policy, bucket, variável de ambiente ou comando de execução. Remova uma afirmação planejada quando ela deixar de refletir o produto, ou marque-a como backlog em [Fluxos e status](flows.md).
 
-- [Requisitos Globais](02-requisitos/global/01-requisitos-globais.md) — Requisitos do núcleo global (autenticação, usuários, prontuário, etc.)
-- [Requisitos do Módulo de Afastamentos](02-requisitos/modulos/afastamentos/01-requisitos-afastamentos.md)
+Quando dois documentos parecerem discordar, considere esta ordem de autoridade:
 
-### 03 — Casos de Uso
-Documentação dos atores e casos de uso do sistema.
-
-- [Atores Globais](03-casos-de-uso/global/01-atores-globais.md) — Usuários que interagem com o núcleo global
-- [Diagrama de Casos de Uso Global](03-casos-de-uso/global/02-diagrama-casos-de-uso-global.md) — Diagrama UML dos casos de uso globais
-- [Casos de Uso Globais Detalhados](03-casos-de-uso/global/03-casos-de-uso-globais.md) — Descrição detalhada de cada caso de uso global
-- [Atores do Módulo de Afastamentos](03-casos-de-uso/modulos/afastamentos/01-atores-afastamentos.md)
-- [Diagrama de Casos de Uso de Afastamentos](03-casos-de-uso/modulos/afastamentos/02-diagrama-casos-de-uso-afastamentos.md)
-- [Casos de Uso de Afastamentos](03-casos-de-uso/modulos/afastamentos/03-casos-de-uso-afastamentos.md)
-
-### 04 — Arquitetura Técnica
-Documentação técnica para implementação:
-
-- [Diagrama de Classes](04-arquitetura/01-diagrama-classes.md) — Estrutura conceitual do software
-- [Modelo de Dados](04-arquitetura/02-modelo-dados.md) — Schemas, tabelas, relacionamentos e RPCs
-- [Arquitetura do Sistema](04-arquitetura/03-arquitetura.md) — Organização técnica das camadas
-- [Autenticação e Autorização](04-arquitetura/04-autenticacao-autorizacao.md) — Supabase Auth, RBAC, RLS e escopo
-
-## Como Navegar
-
-1. Comece pela [Descrição Geral](00-descricao/02-descricao-geral.md).
-2. Veja o [Status e Checklists](01-status/README.md) para entender o que já existe.
-3. Consulte os [Requisitos Globais](02-requisitos/global/01-requisitos-globais.md) e os requisitos do módulo que será alterado.
-4. Use os [Casos de Uso](03-casos-de-uso/global/03-casos-de-uso-globais.md) para entender atores e fluxos.
-5. Revise a [Arquitetura Técnica](04-arquitetura/README.md) antes de mexer em dados, permissões ou rotas.
-
-## Estrutura da Documentação
-
-```text
-docs/
-├── 00-descricao/          # Visão geral e conceitos
-├── 01-status/             # Status e checklists por módulo
-├── 02-requisitos/         # Requisitos funcionais e não funcionais
-│   ├── global/           # Requisitos do núcleo global
-│   └── modulos/          # Requisitos específicos por módulo
-├── 03-casos-de-uso/       # Atores e casos de uso
-│   ├── global/           # Casos de uso do núcleo global
-│   └── modulos/          # Casos de uso específicos por módulo
-└── 04-arquitetura/        # Documentação técnica
-```
-
-## Princípios de Organização
-
-### Separação Global vs Módulos
-- **Global**: Funcionalidades compartilhadas por toda a plataforma (autenticação, usuários, prontuário, etc.)
-- **Módulos**: Funcionalidades específicas de cada domínio de negócio (afastamentos, férias, etc.)
-
-### Prontuário Funcional Digital
-O Servidor 360 organiza a vida funcional do servidor em um prontuário digital unificado, com:
-- Controle de acesso por perfil
-- Separação entre informações funcionais e médico/ocupacionais
-- Histórico e rastreabilidade completa
-- Integração entre módulos
-
-### Modularidade
-Cada módulo é independente mas utiliza os recursos globais, evitando duplicação de responsabilidades.
-
-## Status da Documentação
-
-| Seção | Status |
-|-------|--------|
-| Descrição Geral | ✅ Completo |
-| Status e Checklists | ✅ Criado |
-| Requisitos Globais | ✅ Completo |
-| Requisitos por Módulo | 🚧 Em evolução |
-| Casos de Uso Globais | ✅ Completo |
-| Casos de Uso por Módulo | 🚧 Em evolução |
-| Arquitetura Técnica | 🚧 Atualizada conforme implementação atual |
-| Guia de Contribuição | ✅ Completo |
-
-## Recursos Adicionais
-
-- [Package.json](../package.json) — Dependências e scripts do projeto
-- [Guia de Contribuição](CONTRIBUTING.md) — Padrões e convenções para documentação
-
----
-
-**Servidor 360 — Toda a vida funcional. Um único lugar. Acesso certo para cada responsabilidade.**
+1. migrations e configuração do Supabase;
+2. código de rotas, services e hooks;
+3. documentação canônica;
+4. materiais auxiliares.

@@ -44,6 +44,7 @@ export function NovoAfastamentoForm({
               <label>
                 <FieldLabel required>Tipo</FieldLabel>
                 <select
+                  name="tipoAfastamento"
                   value={form.tipo}
                   onChange={(event) => onFieldChange("tipo", event.target.value)}
                   className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm"
@@ -59,6 +60,7 @@ export function NovoAfastamentoForm({
               <label>
                 <FieldLabel required>Inicio</FieldLabel>
                 <input
+                  name="dataInicioAfastamento"
                   type="date"
                   value={form.dataInicio}
                   onChange={(event) =>
@@ -71,6 +73,7 @@ export function NovoAfastamentoForm({
               <label>
                 <FieldLabel required>Fim</FieldLabel>
                 <input
+                  name="dataFimAfastamento"
                   type="date"
                   value={form.dataFim}
                   onChange={(event) =>
@@ -87,9 +90,13 @@ export function NovoAfastamentoForm({
               Documento
             </h3>
             <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+              <label htmlFor="documento-afastamento" className="sr-only">
+                Documento do afastamento
+              </label>
               <input
                 ref={documentoInputRef}
                 id="documento-afastamento"
+                name="documentoAfastamento"
                 type="file"
                 accept="application/pdf,image/png,image/jpeg,image/webp"
                 onChange={(event) => {
@@ -102,7 +109,7 @@ export function NovoAfastamentoForm({
                 type="button"
                 onClick={handleDocumentoButtonClick}
                 disabled={isDocumentoButtonBusy}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:bg-emerald-600"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-wait disabled:bg-emerald-600"
                 aria-controls="documento-afastamento"
               >
                 {isDocumentoButtonBusy ? (
@@ -111,9 +118,9 @@ export function NovoAfastamentoForm({
                   <FileUp className="h-4 w-4" aria-hidden="true" />
                 )}
                 {isFilePickerOpening
-                  ? "Abrindo explorador..."
+                  ? "Abrindo explorador…"
                   : isDocumentoLoading
-                    ? "Carregando..."
+                    ? "Carregando…"
                     : "Carregar atestado"}
               </button>
               <p className="mt-3 text-sm text-slate-600">
@@ -131,6 +138,7 @@ export function NovoAfastamentoForm({
               <label>
                 <FieldLabel required>Motivo</FieldLabel>
                 <textarea
+                  name="motivoAfastamento"
                   value={form.motivo}
                   onChange={(event) =>
                     onFieldChange("motivo", event.target.value)
@@ -143,6 +151,7 @@ export function NovoAfastamentoForm({
               <label>
                 <FieldLabel>Observacoes</FieldLabel>
                 <textarea
+                  name="observacoesAfastamento"
                   value={form.observacoes}
                   onChange={(event) =>
                     onFieldChange("observacoes", event.target.value)
@@ -154,7 +163,11 @@ export function NovoAfastamentoForm({
             </div>
           </section>
           {errorMessage && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div
+              className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+              role="alert"
+              aria-live="polite"
+            >
               {errorMessage}
             </div>
           )}
@@ -162,16 +175,16 @@ export function NovoAfastamentoForm({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isPending ? "Enviando..." : "Registrar afastamento"}
+              {isPending ? "Enviando…" : "Registrar afastamento"}
             </button>
           </div>
         </div>

@@ -9,29 +9,13 @@ import {
   ShieldCheck,
   Stamp,
 } from "lucide-react";
+import { DOCUMENTO_DIGITAL_STATUS_LABELS } from "../constants/afastamentos.constants";
 import type {
-  AfastamentoDetalhe,
+  AfastamentoCofreDigitalProps,
   AfastamentoDocumentoDigital,
+  DocumentoDigitalCardProps,
 } from "../types/afastamentos.types";
 import { formatDateTime } from "../utils/afastamentos.utils";
-
-interface AfastamentoCofreDigitalProps {
-  detalhe: AfastamentoDetalhe;
-  canGenerateDocument: boolean;
-  canSignDocument: boolean;
-  isGenerating: boolean;
-  isSigning: boolean;
-  onGenerateDocument: (tipo: "devolutiva_formal") => void;
-  onSignDocument: (documentoId: string, password: string) => void;
-}
-
-const statusLabels: Record<AfastamentoDocumentoDigital["status"], string> = {
-  rascunho: "Rascunho",
-  aguardando_assinatura: "Aguardando assinatura",
-  assinado: "Assinado",
-  substituido: "Substituido",
-  cancelado: "Cancelado",
-};
 
 export function AfastamentoCofreDigital({
   detalhe,
@@ -53,6 +37,8 @@ export function AfastamentoCofreDigital({
     setPassword("");
     setSigningDocument(null);
   };
+  const signDialogTitleId = "cofre-sign-dialog-title";
+  const signDialogDescriptionId = "cofre-sign-dialog-description";
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -78,7 +64,7 @@ export function AfastamentoCofreDigital({
               type="button"
               onClick={() => onGenerateDocument("devolutiva_formal")}
               disabled={isGenerating}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               <FileCheck2 className="h-4 w-4" aria-hidden="true" />
               Gerar devolutiva
@@ -106,17 +92,23 @@ export function AfastamentoCofreDigital({
       </div>
 
       {signingDocument && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-strong">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={signDialogTitleId}
+          aria-describedby={signDialogDescriptionId}
+        >
+          <div className="w-full max-w-md overscroll-contain rounded-lg bg-white p-5 shadow-strong">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
                 <LockKeyhole className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
-                <h4 className="text-base font-bold text-slate-950">
+                <h4 id={signDialogTitleId} className="text-base font-bold text-slate-950">
                   Confirmar assinatura
                 </h4>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p id={signDialogDescriptionId} className="mt-1 text-sm leading-6 text-slate-600">
                   Confirme sua senha para registrar a assinatura eletronica do
                   documento {signingDocument.protocolo}.
                 </p>
@@ -126,10 +118,11 @@ export function AfastamentoCofreDigital({
               Senha do usuario
               <input
                 type="password"
+                name="senhaAssinaturaDocumento"
+                autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 block h-11 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-700 focus:ring-4 focus:ring-emerald-100"
-                autoFocus
+                className="mt-2 block h-11 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-950 transition-colors focus-visible:border-emerald-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100"
               />
             </label>
             <div className="mt-5 flex justify-end gap-2">
@@ -139,7 +132,7 @@ export function AfastamentoCofreDigital({
                   setSigningDocument(null);
                   setPassword("");
                 }}
-                className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
               >
                 Cancelar
               </button>
@@ -147,7 +140,7 @@ export function AfastamentoCofreDigital({
                 type="button"
                 onClick={submitSignature}
                 disabled={isSigning || !password.trim()}
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="inline-flex h-10 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 <Stamp className="h-4 w-4" aria-hidden="true" />
                 Assinar
@@ -165,12 +158,7 @@ function DocumentoDigitalCard({
   canSignDocument,
   isSigning,
   onRequestSign,
-}: {
-  documento: AfastamentoDocumentoDigital;
-  canSignDocument: boolean;
-  isSigning: boolean;
-  onRequestSign: () => void;
-}) {
+}: DocumentoDigitalCardProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const validationUrl = `${window.location.origin}/validar-documento/${documento.protocolo}`;
 
@@ -202,7 +190,7 @@ function DocumentoDigitalCard({
               {documento.titulo}
             </h4>
             <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-              {statusLabels[documento.status]}
+              {DOCUMENTO_DIGITAL_STATUS_LABELS[documento.status]}
             </span>
           </div>
           <dl className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
@@ -263,7 +251,9 @@ function DocumentoDigitalCard({
             {qrCodeUrl ? (
               <img
                 src={qrCodeUrl}
-                alt={`QR Code de validacao do documento ${documento.protocolo}`}
+                alt={`QR Code de validação do documento ${documento.protocolo}`}
+                width={96}
+                height={96}
                 className="h-24 w-24"
               />
             ) : (
@@ -275,7 +265,7 @@ function DocumentoDigitalCard({
               type="button"
               onClick={onRequestSign}
               disabled={isSigning}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               <Stamp className="h-4 w-4" aria-hidden="true" />
               Assinar

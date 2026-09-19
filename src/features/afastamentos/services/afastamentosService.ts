@@ -8,63 +8,67 @@ import type {
   AfastamentoMovimentacao,
   AfastamentoProvidencia,
   AfastamentoResumo,
+  AfastamentoRow,
   AfastamentoStatus,
+  AssinaturaDigitalRow,
   AssinarDocumentoDigitalInput,
   DevolutivaAlert,
+  DocumentoDigitalRow,
   EmitirDevolutivaInput,
   GerarDocumentoDigitalInput,
   ListServidoresForAfastamentoParams,
+  ListAfastamentosParams,
+  NovoAfastamentoFormFields,
+  MedicoFilaAvaliacao,
   RegistrarAnaliseInput,
   RegistrarProvidenciaInput,
   ResponderComplementacaoInput,
   ServidorOption,
+  TriagemDecisao,
+  TriagemResultado,
   ValidacaoDocumentoDigital,
 } from "../types/afastamentos.types";
 
-interface AfastamentoRow {
-  id: string;
-  servidor_id: string;
-  status: AfastamentoStatus;
-  protocolo: string | null;
-  tipo: string | null;
-  data_inicio: string | null;
-  data_fim: string | null;
-  motivo: string | null;
-  observacoes?: string | null;
-  documento_origem_nome: string | null;
-  documento_origem_url?: string | null;
-  documento_origem_tipo: string | null;
-  iniciado_em: string;
+const documentosBucket = "afastamentos-documentos";
+const resultadoPorDecisao: Record<TriagemDecisao, TriagemResultado> = {
+  solicitar_complementacao: "documentacao_incompleta",
+  encaminhar_avaliacao: "necessita_avaliacao_medica",
+  homologar: "homologado",
+};
+
+interface MedicoFilaAvaliacaoRow {
+  medico_id: string;
+  nome: string;
+  registro_profissional: string | null;
+  especialidade: string | null;
+  unidade: string | null;
+  pacientes_pendentes: number;
 }
 
-interface DocumentoDigitalRow {
+interface MovimentacaoRow {
   id: string;
-  afastamento_id: string;
   tipo: string;
   titulo: string;
-  protocolo: string;
-  status: AfastamentoDocumentoDigital["status"];
-  conteudo: Record<string, unknown>;
-  hash_sha256: string;
-  qr_payload: string;
+  descricao: string | null;
+  status_origem: AfastamentoStatus | null;
+  status_destino: AfastamentoStatus | null;
   criado_por: string | null;
+  criado_por_nome: string | null;
   criado_em: string;
-  assinado_em: string | null;
 }
 
-interface AssinaturaDigitalRow {
+interface ServidorResumoRow {
   id: string;
-  documento_id: string;
-  assinante_id: string;
-  assinante_nome: string;
-  assinante_email: string | null;
-  perfil_assinante: string | null;
-  assinado_em: string;
-  ip: string | null;
-  user_agent: string | null;
+  vinculo_id: string;
+  nome: string;
+  matricula: string;
+  cpf: string;
+  cargo: string | null;
+  funcao: string | null;
+  unidade_id: string;
+  unidade_nome: string | null;
+  ativo: boolean;
 }
-
-const documentosBucket = "afastamentos-documentos";
 
 function safeFileName(fileName: string) {
   return fileName
@@ -127,9 +131,11 @@ function mapAfastamento(
   return {
     id: row.id,
     servidorId: row.servidor_id,
+    vinculoId: row.vinculo_funcional_id,
     servidorNome: servidor?.nome ?? "Servidor nao encontrado",
     servidorMatricula: servidor?.matricula ?? "-",
     servidorCargo: servidor?.cargo ?? "-",
+    unidadeId: servidor?.unidadeId ?? null,
     unidadeNome: servidor?.unidadeNome ?? "Unidade nao informada",
     status: row.status,
     protocolo: row.protocolo,
@@ -183,6 +189,87 @@ export async function createSha256Hash(value: unknown) {
     .join("");
 }
 
+export async function buildDevolutivaFormalDocumentoInput(
+  detalhe: AfastamentoDetalhe,
+): Promise<GerarDocumentoDigitalInput> {
+  const conteudo = {
+    tipoDocumento: "devolutiva_formal",
+    processo: {
+      id: detalhe.id,
+      protocolo: detalhe.protocolo,
+      status: detalhe.status,
+      tipo: detalhe.tipo,
+      periodo: {
+        inicio: detalhe.dataInicio,
+        fim: detalhe.dataFim,
+      },
+      motivo: detalhe.motivo,
+      observacoes: detalhe.observacoes,
+    },
+    servidor: {
+      id: detalhe.servidorId,
+      nome: detalhe.servidorNome,
+      matricula: detalhe.servidorMatricula,
+      cargo: detalhe.servidorCargo,
+      unidade: detalhe.unidadeNome,
+    },
+    devolutiva: detalhe.devolutivas[0] ?? null,
+    providencias: detalhe.providencias,
+    geradoEm: new Date().toISOString(),
+  };
+
+  return {
+    afastamentoId: detalhe.id,
+    tipo: "devolutiva_formal",
+    titulo: "Devolutiva formal do afastamento",
+    conteudo,
+    hashSha256: await createSha256Hash(conteudo),
+  };
+}
+
+export async function buildAtestadoEnviadoDocumentoInput(
+  afastamentoId: string,
+  servidor: ServidorOption,
+  form: NovoAfastamentoFormFields,
+): Promise<GerarDocumentoDigitalInput> {
+  const conteudo = {
+    tipoDocumento: "atestado_enviado",
+    processo: {
+      id: afastamentoId,
+      tipo: form.tipo,
+      periodo: {
+        inicio: form.dataInicio,
+        fim: form.dataFim,
+      },
+      motivo: form.motivo,
+      observacoes: form.observacoes,
+    },
+    servidor: {
+      id: servidor.id,
+      nome: servidor.nome,
+      matricula: servidor.matricula,
+      cargo: servidor.cargo,
+      unidade: servidor.unidadeNome,
+    },
+    documentoAnexado: form.documentoArquivo
+      ? {
+          nome: form.documentoArquivo.name,
+          tipo: form.documentoArquivo.type,
+          tamanhoBytes: form.documentoArquivo.size,
+        }
+      : null,
+    geradoEm: new Date().toISOString(),
+  };
+
+  return {
+    afastamentoId,
+    tipo: "atestado_enviado",
+    titulo: "Atestado enviado para analise",
+    conteudo,
+    hashSha256: await createSha256Hash(conteudo),
+  };
+}
+
 export async function confirmarSenhaUsuario(password: string) {
   const {
     data: { user },
@@ -202,52 +289,34 @@ export async function confirmarSenhaUsuario(password: string) {
   }
 }
 
-async function getServidoresById(ids: string[]) {
+async function getVinculosById(ids: string[]) {
   const uniqueIds = [...new Set(ids)].filter(Boolean);
   if (uniqueIds.length === 0) return new Map<string, ServidorOption>();
 
-  const { data, error } = await supabase
-    .schema("servidores")
-    .from("servidores")
-    .select("id, nome, matricula, cpf, cargo, unidade_id, ativo")
-    .in("id", uniqueIds);
+  const { data, error } = await supabase.rpc(
+    "get_vinculos_resumo_for_afastamentos",
+    { vinculo_ids: uniqueIds },
+  );
 
   if (error) throw error;
 
-  const unidadeIds = [
-    ...new Set((data ?? []).map((servidor) => servidor.unidade_id)),
-  ];
-  const { data: unidades, error: unidadesError } =
-    unidadeIds.length > 0
-      ? await supabase
-          .schema("organizacional")
-          .from("unidades")
-          .select("id, nome")
-          .in("id", unidadeIds)
-      : { data: [], error: null };
-
-  if (unidadesError) throw unidadesError;
-
-  const unidadeNamesById = new Map(
-    (unidades ?? []).map((unidade) => [unidade.id, unidade.nome]),
+  return new Map(
+    ((data ?? []) as ServidorResumoRow[]).map((servidor) => [
+      servidor.vinculo_id,
+      {
+        id: servidor.id,
+        vinculoId: servidor.vinculo_id,
+        nome: servidor.nome,
+        matricula: servidor.matricula,
+        cpf: servidor.cpf,
+        cargo: servidor.cargo ?? "Servidor publico",
+        funcao: servidor.funcao,
+        unidadeId: servidor.unidade_id,
+        unidadeNome: servidor.unidade_nome ?? "Unidade nao informada",
+        situacao: servidor.ativo ? "ativo" : "afastado",
+      } satisfies ServidorOption,
+    ]),
   );
-  const servidores = new Map<string, ServidorOption>();
-
-  for (const servidor of data ?? []) {
-    servidores.set(servidor.id, {
-      id: servidor.id,
-      nome: servidor.nome,
-      matricula: servidor.matricula,
-      cpf: servidor.cpf,
-      cargo: servidor.cargo ?? "Servidor publico",
-      unidadeId: servidor.unidade_id,
-      unidadeNome:
-        unidadeNamesById.get(servidor.unidade_id) ?? "Unidade nao informada",
-      situacao: servidor.ativo ? "ativo" : "afastado",
-    });
-  }
-
-  return servidores;
 }
 
 export async function listServidoresForAfastamento({
@@ -258,48 +327,26 @@ export async function listServidoresForAfastamento({
     return [];
   }
 
-  let query = supabase
-    .schema("servidores")
-    .from("servidores")
-    .select("id, nome, matricula, cpf, cargo, unidade_id, ativo")
-    .order("nome", { ascending: true });
-
-  if (restrictedToAllowedUnidades) {
-    query = query.in("unidade_id", allowedUnidades);
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc(
+    "list_servidores_for_afastamentos",
+    {
+      allowed_unidades: restrictedToAllowedUnidades ? allowedUnidades : null,
+    },
+  );
 
   if (error) throw error;
 
-  const unidadeIds = [
-    ...new Set((data ?? []).map((servidor) => servidor.unidade_id)),
-  ];
-  const { data: unidades, error: unidadesError } =
-    unidadeIds.length > 0
-      ? await supabase
-          .schema("organizacional")
-          .from("unidades")
-          .select("id, nome")
-          .in("id", unidadeIds)
-      : { data: [], error: null };
-
-  if (unidadesError) throw unidadesError;
-
-  const unidadeNamesById = new Map(
-    (unidades ?? []).map((unidade) => [unidade.id, unidade.nome]),
-  );
-
-  return (data ?? []).map((servidor) => {
+  return ((data ?? []) as ServidorResumoRow[]).map((servidor) => {
     return {
       id: servidor.id,
+      vinculoId: servidor.vinculo_id,
       nome: servidor.nome,
       matricula: servidor.matricula,
       cpf: servidor.cpf,
       cargo: servidor.cargo ?? "Servidor publico",
+      funcao: servidor.funcao,
       unidadeId: servidor.unidade_id,
-      unidadeNome:
-        unidadeNamesById.get(servidor.unidade_id) ?? "Unidade nao informada",
+      unidadeNome: servidor.unidade_nome ?? "Unidade nao informada",
       situacao: servidor.ativo ? "ativo" : "afastado",
     };
   }) satisfies ServidorOption[];
@@ -308,8 +355,8 @@ export async function listServidoresForAfastamento({
 export async function createAfastamento(
   input: AfastamentoFormData,
 ): Promise<string> {
-  const servidores = await getServidoresById([input.servidorId]);
-  const servidor = servidores.get(input.servidorId);
+  const vinculos = await getVinculosById([input.vinculoId]);
+  const servidor = vinculos.get(input.vinculoId);
   const documentoNome = input.documentoArquivo
     ? buildDocumentoName(servidor, input.tipo, input.documentoArquivo)
     : null;
@@ -324,6 +371,7 @@ export async function createAfastamento(
   const { data, error } = await supabase.rpc("criar_afastamento", {
     input: {
       servidorId: input.servidorId,
+      vinculoId: input.vinculoId,
       tipo: input.tipo,
       dataInicio: input.dataInicio,
       dataFim: input.dataFim,
@@ -340,24 +388,51 @@ export async function createAfastamento(
   return data as string;
 }
 
-export async function listAfastamentos(): Promise<AfastamentoResumo[]> {
-  const { data, error } = await supabase
+export async function listAfastamentos({
+  allowedUnidades = [],
+  restrictedToAllowedUnidades = false,
+}: ListAfastamentosParams = {}): Promise<AfastamentoResumo[]> {
+  if (restrictedToAllowedUnidades && allowedUnidades.length === 0) {
+    return [];
+  }
+
+  let scopedVinculoIds: string[] | null = null;
+
+  if (restrictedToAllowedUnidades) {
+    const scopedServidores = await listServidoresForAfastamento({
+      allowedUnidades,
+      restrictedToAllowedUnidades: true,
+    });
+    scopedVinculoIds = scopedServidores.map((servidor) => servidor.vinculoId);
+
+    if (scopedVinculoIds.length === 0) {
+      return [];
+    }
+  }
+
+  let query = supabase
     .schema("afastamentos")
     .from("afastamentos")
     .select(
-      "id, servidor_id, status, protocolo, tipo, data_inicio, data_fim, motivo, documento_origem_nome, documento_origem_tipo, iniciado_em",
+      "id, servidor_id, vinculo_funcional_id, status, protocolo, tipo, data_inicio, data_fim, motivo, documento_origem_nome, documento_origem_tipo, iniciado_em",
     )
     .order("updated_at", { ascending: false });
+
+  if (scopedVinculoIds) {
+    query = query.in("vinculo_funcional_id", scopedVinculoIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
   const rows = (data ?? []) as AfastamentoRow[];
-  const servidores = await getServidoresById(
-    rows.map((row) => row.servidor_id),
+  const vinculos = await getVinculosById(
+    rows.map((row) => row.vinculo_funcional_id),
   );
 
   return rows.map((row) =>
-    mapAfastamento(row, servidores.get(row.servidor_id)),
+    mapAfastamento(row, vinculos.get(row.vinculo_funcional_id)),
   );
 }
 
@@ -366,8 +441,8 @@ export async function getAfastamentoDetalhe(
   includeDocumentoUrl = false,
 ): Promise<AfastamentoDetalhe> {
   const selectFields: string = includeDocumentoUrl
-    ? "id, servidor_id, status, protocolo, tipo, data_inicio, data_fim, motivo, observacoes, documento_origem_nome, documento_origem_tipo, iniciado_em, documento_origem_url"
-    : "id, servidor_id, status, protocolo, tipo, data_inicio, data_fim, motivo, observacoes, documento_origem_nome, documento_origem_tipo, iniciado_em";
+    ? "id, servidor_id, vinculo_funcional_id, status, protocolo, tipo, data_inicio, data_fim, motivo, observacoes, documento_origem_nome, documento_origem_tipo, iniciado_em, documento_origem_url"
+    : "id, servidor_id, vinculo_funcional_id, status, protocolo, tipo, data_inicio, data_fim, motivo, observacoes, documento_origem_nome, documento_origem_tipo, iniciado_em";
   const { data, error } = await supabase
     .schema("afastamentos")
     .from("afastamentos")
@@ -378,13 +453,13 @@ export async function getAfastamentoDetalhe(
   if (error) throw error;
 
   const row = data as unknown as AfastamentoRow;
-  const servidores = await getServidoresById([row.servidor_id]);
+  const vinculos = await getVinculosById([row.vinculo_funcional_id]);
   const signedDocumentoUrl = includeDocumentoUrl
     ? await createSignedDocumentoUrl(row.documento_origem_url ?? null)
     : null;
   const resumo = mapAfastamento(
     { ...row, documento_origem_url: signedDocumentoUrl },
-    servidores.get(row.servidor_id),
+    vinculos.get(row.vinculo_funcional_id),
   );
 
   const [
@@ -393,15 +468,11 @@ export async function getAfastamentoDetalhe(
     devolutivasResult,
     providenciasResult,
     documentosDigitaisResult,
+    avaliacaoMedicaResult,
   ] = await Promise.all([
-    supabase
-      .schema("afastamentos")
-      .from("movimentacoes")
-      .select(
-        "id, tipo, titulo, descricao, status_origem, status_destino, criado_em",
-      )
-      .eq("afastamento_id", id)
-      .order("criado_em", { ascending: false }),
+    supabase.rpc("get_movimentacoes_afastamento", {
+      target_afastamento_id: id,
+    }),
     supabase
       .schema("afastamentos")
       .from("complementacoes")
@@ -430,6 +501,13 @@ export async function getAfastamentoDetalhe(
       )
       .eq("afastamento_id", id)
       .order("criado_em", { ascending: false }),
+    supabase
+      .schema("afastamentos")
+      .from("avaliacoes_medicas")
+      .select("medico_id, encaminhado_em")
+      .eq("afastamento_id", id)
+      .eq("status", "pendente")
+      .maybeSingle(),
   ]);
 
   if (movimentacoesResult.error) throw movimentacoesResult.error;
@@ -437,6 +515,7 @@ export async function getAfastamentoDetalhe(
   if (devolutivasResult.error) throw devolutivasResult.error;
   if (providenciasResult.error) throw providenciasResult.error;
   if (documentosDigitaisResult.error) throw documentosDigitaisResult.error;
+  if (avaliacaoMedicaResult.error) throw avaliacaoMedicaResult.error;
 
   const documentoIds = (documentosDigitaisResult.data ?? []).map(
     (documento) => documento.id,
@@ -467,13 +546,21 @@ export async function getAfastamentoDetalhe(
   return {
     ...resumo,
     observacoes: row.observacoes ?? null,
-    movimentacoes: (movimentacoesResult.data ?? []).map((item) => ({
+    avaliacaoMedicaAtual: avaliacaoMedicaResult.data
+      ? {
+          medicoId: avaliacaoMedicaResult.data.medico_id,
+          encaminhadoEm: avaliacaoMedicaResult.data.encaminhado_em,
+        }
+      : null,
+    movimentacoes: ((movimentacoesResult.data ?? []) as MovimentacaoRow[]).map((item) => ({
       id: item.id,
       tipo: item.tipo,
       titulo: item.titulo,
       descricao: item.descricao,
       statusOrigem: item.status_origem,
       statusDestino: item.status_destino,
+      criadoPor: item.criado_por,
+      criadoPorNome: item.criado_por_nome,
       criadoEm: item.criado_em,
     })) satisfies AfastamentoMovimentacao[],
     complementacoes: (complementacoesResult.data ?? []).map((item) => ({
@@ -558,14 +645,42 @@ export async function validarDocumentoDigital(
 }
 
 export async function registrarAnalise(input: RegistrarAnaliseInput) {
-  const { error } = await supabase.rpc("registrar_analise_afastamento", {
+  if (input.proximaAcao === "encaminhar_avaliacao" && !input.medicoId) {
+    throw new Error("Selecione um médico para encaminhar a avaliação.");
+  }
+
+  const { error } = await supabase.rpc("registrar_triagem_afastamento", {
     target_afastamento_id: input.afastamentoId,
-    analise: input.analise,
-    proxima_acao: input.proximaAcao,
-    complemento: input.complemento ?? null,
+    resultado: resultadoPorDecisao[input.proximaAcao],
+    encaminhamento: input.proximaAcao,
+    comentarios: input.analise,
+    complemento:
+      input.proximaAcao === "solicitar_complementacao"
+        ? input.analise
+        : null,
+    target_medico_id:
+      input.proximaAcao === "encaminhar_avaliacao" ? input.medicoId : null,
+    permitir_reatribuicao: input.permitirReatribuicao ?? false,
   });
 
   if (error) throw error;
+}
+
+export async function listMedicosParaAvaliacao(): Promise<
+  MedicoFilaAvaliacao[]
+> {
+  const { data, error } = await supabase.rpc("list_medicos_para_avaliacao");
+
+  if (error) throw error;
+
+  return ((data ?? []) as MedicoFilaAvaliacaoRow[]).map((medico) => ({
+    medicoId: medico.medico_id,
+    nome: medico.nome,
+    registroProfissional: medico.registro_profissional,
+    especialidade: medico.especialidade,
+    unidade: medico.unidade,
+    pacientesPendentes: Number(medico.pacientes_pendentes),
+  }));
 }
 
 export async function responderComplementacao(
@@ -574,14 +689,16 @@ export async function responderComplementacao(
   const { data: afastamentoData, error: afastamentoError } = await supabase
     .schema("afastamentos")
     .from("afastamentos")
-    .select("servidor_id, tipo")
+    .select("vinculo_funcional_id, tipo")
     .eq("id", input.afastamentoId)
     .single();
 
   if (afastamentoError) throw afastamentoError;
 
-  const servidores = await getServidoresById([afastamentoData.servidor_id]);
-  const servidor = servidores.get(afastamentoData.servidor_id);
+  const vinculos = await getVinculosById([
+    afastamentoData.vinculo_funcional_id,
+  ]);
+  const servidor = vinculos.get(afastamentoData.vinculo_funcional_id);
   const documentoNome = input.documentoArquivo
     ? buildDocumentoName(
         servidor,

@@ -39,6 +39,12 @@ export function ModuleLayout({
 
   return (
     <div className="min-h-screen bg-slate-100">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950 focus:shadow-strong"
+      >
+        Ir para o conteúdo principal
+      </a>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="min-w-0">
@@ -48,17 +54,17 @@ export function ModuleLayout({
             <h1 className="mt-1 truncate text-2xl font-bold text-slate-950">{moduleName}</h1>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <Link
-              to={backTo}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
-            >
+              <Link
+                to={backTo}
+                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+              >
               {backLabel}
             </Link>
             {actions.map((action) => {
               const classes =
                 action.variant === 'secondary'
-                  ? 'rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100'
-                  : 'rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800'
+                  ? 'rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2'
+                  : 'rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2'
 
               if (action.to) {
                 return (
@@ -78,7 +84,7 @@ export function ModuleLayout({
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+      <main id="main-content" className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
         <div className="mb-5">
           <h2 className="text-xl font-bold text-slate-950">{title}</h2>
           {description && <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>}
@@ -89,7 +95,7 @@ export function ModuleLayout({
               <Link
                 key={item.to}
                   to={item.to}
-                  className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                  className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
                   item.active
                     ? 'bg-emerald-50 text-emerald-800'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'

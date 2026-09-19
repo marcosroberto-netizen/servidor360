@@ -1,50 +1,9 @@
-import type {
-  AfastamentoStatus,
-  DevolutivaResultado,
-} from "../types/afastamentos.types";
-
-const maxDocumentoSize = 10 * 1024 * 1024;
-const allowedDocumentoTypes = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-];
-
-export const statusLabels: Record<AfastamentoStatus, string> = {
-  rascunho: "Rascunho",
-  registrado: "Registrado",
-  encaminhado: "Encaminhado",
-  aguardando_analise: "Aguardando analise",
-  em_analise: "Em analise",
-  aguardando_complementacao: "Aguardando complementacao",
-  aguardando_avaliacao: "Aguardando avaliacao",
-  avaliado: "Avaliado",
-  aguardando_rh: "Aguardando RH",
-  concluido: "Concluido",
-};
-
-export const statusBadgeClasses: Record<AfastamentoStatus, string> = {
-  rascunho: "border-slate-200 bg-slate-50 text-slate-700",
-  registrado: "border-sky-200 bg-sky-50 text-sky-800",
-  encaminhado: "border-indigo-200 bg-indigo-50 text-indigo-800",
-  aguardando_analise: "border-amber-200 bg-amber-50 text-amber-800",
-  em_analise: "border-blue-200 bg-blue-50 text-blue-800",
-  aguardando_complementacao: "border-orange-200 bg-orange-50 text-orange-800",
-  aguardando_avaliacao: "border-violet-200 bg-violet-50 text-violet-800",
-  avaliado: "border-teal-200 bg-teal-50 text-teal-800",
-  aguardando_rh: "border-cyan-200 bg-cyan-50 text-cyan-800",
-  concluido: "border-emerald-200 bg-emerald-50 text-emerald-800",
-};
-
-export const resultadoLabels: Record<DevolutivaResultado, string> = {
-  apto: "Apto",
-  inapto: "Inapto",
-  apto_com_restricoes: "Apto com restricoes",
-  nova_avaliacao: "Necessidade de nova avaliacao",
-  complementacao: "Necessidade de complementacao",
-  outra: "Outra conclusao",
-};
+import {
+  ALLOWED_DOCUMENTO_TYPES,
+  AFASTAMENTOS_PERMISSIONS,
+  MAX_DOCUMENTO_SIZE,
+} from "../constants/afastamentos.constants";
+import type { AfastamentosActionPermissions } from "../types/afastamentos.types";
 export function hasPermission(
   permissions: string[],
   permission: string,
@@ -53,6 +12,48 @@ export function hasPermission(
   return (
     permissions.includes(adminPermission) || permissions.includes(permission)
   );
+}
+
+export function getAfastamentosActionPermissions(
+  permissions: string[],
+): Omit<AfastamentosActionPermissions, "canCreate"> {
+  return {
+    canAnalyze: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.ANALISAR,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canComplement: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.COMPLEMENTAR,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canIssueReturn: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.EMITIR_DEVOLUTIVA,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canRegisterProvidence: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.REGISTRAR_PROVIDENCIA,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canViewDocument: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.VIEW_DOCUMENT,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canGenerateDocument: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.GERAR_DOCUMENTO,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+    canSignDocument: hasPermission(
+      permissions,
+      AFASTAMENTOS_PERMISSIONS.ASSINAR_DOCUMENTO,
+      AFASTAMENTOS_PERMISSIONS.ADMIN,
+    ),
+  };
 }
 export function today() {
   return new Date().toISOString().slice(0, 10);
@@ -87,18 +88,18 @@ export function getErrorMessage(error: unknown) {
     if (typeof message === "string" && message) return message;
   }
 
-  return "Nao foi possivel concluir a operacao. Tente novamente.";
+  return "Não foi possível concluir a operação. Tente novamente.";
 }
 
 export function validateDocumentoFile(file: File | null) {
   if (!file) return null;
 
-  if (!allowedDocumentoTypes.includes(file.type)) {
-    return "Arquivo invalido. Envie PDF, PNG, JPG ou WEBP.";
+  if (!ALLOWED_DOCUMENTO_TYPES.includes(file.type)) {
+    return "Arquivo inválido. Envie PDF, PNG, JPG ou WEBP.";
   }
 
-  if (file.size > maxDocumentoSize) {
-    return "Arquivo muito grande. O limite para documentos e 10 MB.";
+  if (file.size > MAX_DOCUMENTO_SIZE) {
+    return "Arquivo muito grande. O limite para documentos é 10 MB.";
   }
 
   return null;

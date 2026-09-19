@@ -2,10 +2,12 @@ import type { SyntheticEvent } from "react";
 
 export interface ServidorOption {
   id: string;
+  vinculoId: string;
   nome: string;
   matricula: string;
   cpf: string;
   cargo: string;
+  funcao: string | null;
   unidadeId: string;
   unidadeNome: string;
   situacao: "ativo" | "afastado";
@@ -17,13 +19,123 @@ export interface AfastamentosAuthorization {
   allowedUnitIds: string[];
 }
 
-export interface AfastamentosPageProps {
+export interface AfastamentosActionPermissions {
+  canAnalyze: boolean;
+  canComplement: boolean;
+  canCreate: boolean;
+  canGenerateDocument: boolean;
+  canIssueReturn: boolean;
+  canRegisterProvidence: boolean;
+  canSignDocument: boolean;
+  canViewDocument: boolean;
+}
+
+export type AfastamentosPageVariant = "geral" | "educacao" | "cas" | "dp";
+
+export type AfastamentosViewScope = "operational" | "administrative";
+
+export type PendingAfastamentoAction =
+  | "analise"
+  | "complementacao"
+  | "devolutiva"
+  | "providencia"
+  | null;
+
+export type DocumentoDigitalTipo = "atestado_enviado" | "devolutiva_formal";
+
+export type TriagemResultado =
+  | "documentacao_regular"
+  | "documentacao_incompleta"
+  | "necessita_avaliacao_medica"
+  | "homologado";
+
+export type TriagemDecisao =
+  | "solicitar_complementacao"
+  | "encaminhar_avaliacao"
+  | "homologar";
+
+export interface MedicoFilaAvaliacao {
+  medicoId: string;
+  nome: string;
+  registroProfissional: string | null;
+  especialidade: string | null;
+  unidade: string | null;
+  pacientesPendentes: number;
+}
+
+export interface AfastamentosPageVariantConfig {
+  title: string;
+  description: string;
+  statuses?: AfastamentoStatus[];
+  allowCreate: boolean;
+  permission: string;
+  scope: AfastamentosViewScope;
+}
+
+export interface AfastamentoActionFeedback {
+  confirmTitle: string;
+  confirmDescription: string;
+  successTitle: string;
+}
+
+export interface AfastamentosViewProps {
   authorization: AfastamentosAuthorization;
+  variant?: AfastamentosPageVariant;
+  scope: AfastamentosViewScope;
 }
 
 export interface ListServidoresForAfastamentoParams {
   allowedUnidades?: string[];
   restrictedToAllowedUnidades?: boolean;
+}
+
+export interface ListAfastamentosParams {
+  allowedUnidades?: string[];
+  restrictedToAllowedUnidades?: boolean;
+}
+
+export interface AfastamentoRow {
+  id: string;
+  servidor_id: string;
+  vinculo_funcional_id: string;
+  status: AfastamentoStatus;
+  protocolo: string | null;
+  tipo: string | null;
+  data_inicio: string | null;
+  data_fim: string | null;
+  motivo: string | null;
+  observacoes?: string | null;
+  documento_origem_nome: string | null;
+  documento_origem_url?: string | null;
+  documento_origem_tipo: string | null;
+  iniciado_em: string;
+}
+
+export interface DocumentoDigitalRow {
+  id: string;
+  afastamento_id: string;
+  tipo: string;
+  titulo: string;
+  protocolo: string;
+  status: DocumentoDigitalStatus;
+  conteudo: Record<string, unknown>;
+  hash_sha256: string;
+  qr_payload: string;
+  criado_por: string | null;
+  criado_em: string;
+  assinado_em: string | null;
+}
+
+export interface AssinaturaDigitalRow {
+  id: string;
+  documento_id: string;
+  assinante_id: string;
+  assinante_nome: string;
+  assinante_email: string | null;
+  perfil_assinante: string | null;
+  assinado_em: string;
+  ip: string | null;
+  user_agent: string | null;
 }
 
 export interface DevolutivaAlert {
@@ -57,6 +169,7 @@ export type DevolutivaResultado =
 
 export interface AfastamentoFormData {
   servidorId: string;
+  vinculoId: string;
   tipo: string;
   dataInicio: string;
   dataFim: string;
@@ -65,7 +178,10 @@ export interface AfastamentoFormData {
   documentoArquivo?: File | null;
 }
 
-export type NovoAfastamentoFormFields = Omit<AfastamentoFormData, "servidorId">;
+export type NovoAfastamentoFormFields = Omit<
+  AfastamentoFormData,
+  "servidorId" | "vinculoId"
+>;
 
 export interface NovoAfastamentoModalProps {
   open: boolean;
@@ -96,12 +212,51 @@ export interface NovoAfastamentoFormProps {
   onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
 }
 
+export interface AfastamentosSummaryProps {
+  counters: {
+    total: number;
+    analise: number;
+    complementacao: number;
+    rh: number;
+  };
+}
+
+export interface AfastamentosFiltersProps {
+  search: string;
+  statusFilter: AfastamentoStatus | "todos";
+  onSearchChange: (value: string) => void;
+  onStatusChange: (status: AfastamentoStatus | "todos") => void;
+}
+
+export interface AfastamentosTableProps {
+  items: AfastamentoResumo[];
+  isLoading: boolean;
+  isError: boolean;
+  errorMessage?: string;
+  onSelect: (id: string) => void;
+}
+
+export type AfastamentosColumnKey =
+  | "servidorNome"
+  | "servidorMatricula"
+  | "unidadeNome"
+  | "protocolo"
+  | "tipo"
+  | "periodo"
+  | "status";
+
+export interface AfastamentoStatusBadgeProps {
+  status: AfastamentoStatus;
+}
+
 export interface AfastamentoResumo {
   id: string;
   servidorId: string;
+  vinculoId: string;
   servidorNome: string;
   servidorMatricula: string;
   servidorCargo: string;
+  unidadeId: string | null;
   unidadeNome: string;
   status: AfastamentoStatus;
   protocolo: string | null;
@@ -122,6 +277,8 @@ export interface AfastamentoMovimentacao {
   descricao: string | null;
   statusOrigem: AfastamentoStatus | null;
   statusDestino: AfastamentoStatus | null;
+  criadoPor: string | null;
+  criadoPorNome: string | null;
   criadoEm: string;
 }
 
@@ -185,6 +342,10 @@ export interface AfastamentoDocumentoDigital {
 
 export interface AfastamentoDetalhe extends AfastamentoResumo {
   observacoes: string | null;
+  avaliacaoMedicaAtual: {
+    medicoId: string;
+    encaminhadoEm: string;
+  } | null;
   movimentacoes: AfastamentoMovimentacao[];
   complementacoes: AfastamentoComplementacao[];
   devolutivas: AfastamentoDevolutiva[];
@@ -192,15 +353,144 @@ export interface AfastamentoDetalhe extends AfastamentoResumo {
   documentosDigitais: AfastamentoDocumentoDigital[];
 }
 
+export interface AfastamentoDetailDialogProps {
+  detalhe: AfastamentoDetalhe | undefined;
+  loadingDetail: boolean;
+  canAnalyze: boolean;
+  canComplement: boolean;
+  canIssueReturn: boolean;
+  canRegisterProvidence: boolean;
+  canViewDocument: boolean;
+  canGenerateDocument: boolean;
+  canSignDocument: boolean;
+  isGeneratingDocument: boolean;
+  isSigningDocument: boolean;
+  analise: string;
+  proximaAcao: TriagemDecisao | null;
+  medicosAvaliadores: MedicoFilaAvaliacao[];
+  isLoadingMedicosAvaliadores: boolean;
+  medicoSelecionadoId: string | null;
+  resposta: string;
+  documentoArquivo: File | null;
+  resultado: DevolutivaResultado;
+  descricao: string;
+  orientacoes: string;
+  encaminharRh: boolean;
+  providencia: string;
+  concluir: boolean;
+  onClose: () => void;
+  onAnaliseChange: (value: string) => void;
+  onProximaAcaoChange: (value: TriagemDecisao) => void;
+  onMedicoSelecionadoChange: (value: string | null) => void;
+  onRespostaChange: (value: string) => void;
+  onDocumentoChange: (value: File | null) => void;
+  onResultadoChange: (value: DevolutivaResultado) => void;
+  onDescricaoChange: (value: string) => void;
+  onOrientacoesChange: (value: string) => void;
+  onEncaminharRhChange: (value: boolean) => void;
+  onProvidenciaChange: (value: string) => void;
+  onConcluirChange: (value: boolean) => void;
+  onGenerateDocument: (tipo: "devolutiva_formal") => void;
+  onSignDocument: (documentoId: string, password: string) => void;
+  onSubmitAnalise: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+  onSubmitComplementacao: (
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ) => void;
+  onSubmitDevolutiva: (
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ) => void;
+  onSubmitProvidencia: (
+    event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
+  ) => void;
+}
+
+export interface AfastamentoCofreDigitalProps {
+  detalhe: AfastamentoDetalhe;
+  canGenerateDocument: boolean;
+  canSignDocument: boolean;
+  isGenerating: boolean;
+  isSigning: boolean;
+  onGenerateDocument: (tipo: "devolutiva_formal") => void;
+  onSignDocument: (documentoId: string, password: string) => void;
+}
+
+export interface DocumentoDigitalCardProps {
+  documento: AfastamentoDocumentoDigital;
+  canSignDocument: boolean;
+  isSigning: boolean;
+  onRequestSign: () => void;
+}
+
+export interface AfastamentoDocumentoPreviewProps {
+  detalhe: AfastamentoDetalhe;
+  canViewDocument: boolean;
+}
+
+export interface AnaliseAfastamentoFormProps {
+  analise: string;
+  proximaAcao: TriagemDecisao | null;
+  medicos: MedicoFilaAvaliacao[];
+  isLoadingMedicos: boolean;
+  medicoSelecionadoId: string | null;
+  medicoAtualId: string | null;
+  onAnaliseChange: (value: string) => void;
+  onProximaAcaoChange: (value: TriagemDecisao) => void;
+  onMedicoSelecionadoChange: (value: string | null) => void;
+  onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+}
+
+export interface MedicoSelectionDrawerProps {
+  medicos: MedicoFilaAvaliacao[];
+  selectedMedicoId: string | null;
+  currentMedicoId?: string | null;
+  isLoading: boolean;
+  onClose: () => void;
+  onConfirm: (medicoId: string) => void;
+}
+
+export interface ComplementacaoAfastamentoFormProps {
+  resposta: string;
+  onRespostaChange: (value: string) => void;
+  onDocumentoChange: (value: File | null) => void;
+  onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+}
+
+export interface DevolutivaAfastamentoFormProps {
+  resultado: DevolutivaResultado;
+  descricao: string;
+  orientacoes: string;
+  encaminharRh: boolean;
+  onResultadoChange: (value: DevolutivaResultado) => void;
+  onDescricaoChange: (value: string) => void;
+  onOrientacoesChange: (value: string) => void;
+  onEncaminharRhChange: (value: boolean) => void;
+  onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+}
+
+export interface ProvidenciaAfastamentoFormProps {
+  providencia: string;
+  concluir: boolean;
+  onProvidenciaChange: (value: string) => void;
+  onConcluirChange: (value: boolean) => void;
+  onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+}
+
+export interface AssinaturaAtestadoDialogProps {
+  open: boolean;
+  servidor: ServidorOption | null;
+  senha: string;
+  isLoading: boolean;
+  onSenhaChange: (value: string) => void;
+  onCancel: () => void;
+  onSubmitSigned: () => void;
+}
+
 export interface RegistrarAnaliseInput {
   afastamentoId: string;
   analise: string;
-  proximaAcao:
-    | "registrar"
-    | "solicitar_complementacao"
-    | "encaminhar_avaliacao"
-    | "encaminhar_rh";
-  complemento?: string;
+  proximaAcao: TriagemDecisao;
+  medicoId?: string;
+  permitirReatribuicao?: boolean;
 }
 
 export interface ResponderComplementacaoInput {
@@ -225,7 +515,7 @@ export interface RegistrarProvidenciaInput {
 
 export interface GerarDocumentoDigitalInput {
   afastamentoId: string;
-  tipo: string;
+  tipo: DocumentoDigitalTipo;
   titulo: string;
   conteudo: Record<string, unknown>;
   hashSha256: string;

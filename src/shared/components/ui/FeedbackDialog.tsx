@@ -38,14 +38,19 @@ export function FeedbackDialog({
   if (!open) return null
 
   const canClose = variant !== 'loading' && Boolean(onClose)
+  const titleId = 'feedback-dialog-title'
+  const descriptionId = description ? 'feedback-dialog-description' : undefined
 
   return (
     <div
       aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      aria-live="polite"
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4"
       role="dialog"
     >
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-strong">
+      <div className="w-full max-w-md overscroll-contain rounded-lg bg-white p-6 shadow-strong">
         <div className="flex items-start gap-4">
           <div
             aria-hidden="true"
@@ -59,9 +64,9 @@ export function FeedbackDialog({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 id={titleId} className="text-lg font-semibold text-slate-900">{title}</h2>
             {description && (
-              <div className="mt-2 text-sm leading-6 text-slate-600">{description}</div>
+              <div id={descriptionId} className="mt-2 text-sm leading-6 text-slate-600">{description}</div>
             )}
           </div>
         </div>
@@ -69,7 +74,7 @@ export function FeedbackDialog({
         {canClose && (
           <div className="mt-6 flex justify-end">
             <button
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
               onClick={onClose}
               type="button"
             >

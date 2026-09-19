@@ -12,6 +12,8 @@ export const PERMISSIONS = {
   SERVIDORES_READ: 'servidores:read',
   SERVIDORES_WRITE: 'servidores:write',
   SERVIDORES_DELETE: 'servidores:delete',
+  MEDICOS_READ: 'medicos:read',
+  MEDICOS_MANAGE: 'medicos:manage',
   DOCUMENTOS_READ: 'documentos:read',
   DOCUMENTOS_WRITE: 'documentos:write',
   DOCUMENTOS_ADMINISTRATIVOS_READ: 'documentos_administrativos:read',

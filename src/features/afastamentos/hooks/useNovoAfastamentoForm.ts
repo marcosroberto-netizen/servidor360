@@ -1,11 +1,13 @@
 import { useMemo, useState, type SyntheticEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCreateAfastamento } from "./useAfastamentos";
 import {
-  assinarDocumentoDigital,
-  confirmarSenhaUsuario,
-  createSha256Hash,
-  gerarDocumentoDigital,
+  useAssinarDocumentoDigital,
+  useConfirmarSenhaUsuario,
+  useCreateAfastamento,
+  useGerarDocumentoDigital,
+} from "./useAfastamentos";
+import {
+  buildAtestadoEnviadoDocumentoInput,
 } from "../services/afastamentosService";
 import { afastamentosKeys } from "../services/afastamentosKeys";
 import type {
@@ -44,6 +46,9 @@ export function useNovoAfastamentoForm(
   const [isSigningAtestado, setIsSigningAtestado] = useState(false);
   const queryClient = useQueryClient();
   const createAfastamento = useCreateAfastamento();
+  const confirmarSenha = useConfirmarSenhaUsuario();
+  const gerarDocumento = useGerarDocumentoDigital();
+  const assinarDocumento = useAssinarDocumentoDigital(null);
 
   const filteredServidores = useMemo(() => {
     const term = normalize(search);
@@ -118,51 +123,22 @@ export function useNovoAfastamentoForm(
     try {
       setIsSigningAtestado(true);
 
-      await confirmarSenhaUsuario(assinaturaSenha);
+      await confirmarSenha.mutateAsync(assinaturaSenha);
 
       const afastamentoId = await createAfastamento.mutateAsync({
         servidorId: selectedServidor.id,
+        vinculoId: selectedServidor.vinculoId,
         ...form,
       });
+      const documentoId = await gerarDocumento.mutateAsync(
+        await buildAtestadoEnviadoDocumentoInput(
+          afastamentoId,
+          selectedServidor,
+          form,
+        ),
+      );
 
-      const conteudo = {
-        tipoDocumento: "atestado_enviado",
-        processo: {
-          id: afastamentoId,
-          tipo: form.tipo,
-          periodo: {
-            inicio: form.dataInicio,
-            fim: form.dataFim,
-          },
-          motivo: form.motivo,
-          observacoes: form.observacoes,
-        },
-        servidor: {
-          id: selectedServidor.id,
-          nome: selectedServidor.nome,
-          matricula: selectedServidor.matricula,
-          cargo: selectedServidor.cargo,
-          unidade: selectedServidor.unidadeNome,
-        },
-        documentoAnexado: form.documentoArquivo
-          ? {
-              nome: form.documentoArquivo.name,
-              tipo: form.documentoArquivo.type,
-              tamanhoBytes: form.documentoArquivo.size,
-            }
-          : null,
-        geradoEm: new Date().toISOString(),
-      };
-      const hashSha256 = await createSha256Hash(conteudo);
-      const documentoId = await gerarDocumentoDigital({
-        afastamentoId,
-        tipo: "atestado_enviado",
-        titulo: "Atestado enviado para analise",
-        conteudo,
-        hashSha256,
-      });
-
-      await assinarDocumentoDigital({
+      await assinarDocumento.mutateAsync({
         documentoId,
         password: assinaturaSenha,
         perfilAssinante: "solicitante",
@@ -189,7 +165,12 @@ export function useNovoAfastamentoForm(
     form,
     errorMessage,
     isDocumentoLoading,
-    isPending: createAfastamento.isPending || isSigningAtestado,
+    isPending:
+      createAfastamento.isPending ||
+      confirmarSenha.isPending ||
+      gerarDocumento.isPending ||
+      assinarDocumento.isPending ||
+      isSigningAtestado,
     search,
     selectedServidor,
     showSignatureDialog,

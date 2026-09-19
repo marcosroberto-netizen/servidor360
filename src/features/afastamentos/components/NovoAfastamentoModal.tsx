@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useNovoAfastamentoForm } from "../hooks/useNovoAfastamentoForm";
 import type { NovoAfastamentoModalProps } from "../types/afastamentos.types";
 import { FeedbackDialog } from "@/shared/components/ui/FeedbackDialog";
@@ -42,8 +43,10 @@ export function NovoAfastamentoModal({
       className="fixed inset-0 z-50 bg-slate-950/50 px-4 py-6"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="novo-afastamento-title"
+      aria-describedby="novo-afastamento-description"
     >
-      <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-strong">
+      <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden overscroll-contain rounded-lg bg-white shadow-strong">
         <AssinaturaAtestadoDialog
           open={showSignatureDialog}
           servidor={selectedServidor}
@@ -69,29 +72,29 @@ export function NovoAfastamentoModal({
         />
         <FeedbackDialog
           open={Boolean(errorMessage)}
-          title="Nao foi possivel enviar"
+          title="Não foi possível enviar"
           description={errorMessage}
           variant="error"
           onClose={closeFeedback}
         />
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-950">
+            <h2 id="novo-afastamento-title" className="text-lg font-bold text-slate-950">
               Novo afastamento
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p id="novo-afastamento-description" className="mt-1 text-sm text-slate-600">
               {selectedServidor
                 ? selectedServidor.nome
-                : "Selecione o funcionario para abrir o formulario."}
+                : "Selecione o funcionário para abrir o formulário."}
             </p>
           </div>
           <button
             type="button"
             onClick={resetAndClose}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 hover:bg-slate-100"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
             aria-label="Fechar"
           >
-            X
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </header>
         <div className="grid min-h-0 flex-1 lg:grid-cols-[400px_minmax(0,1fr)]">

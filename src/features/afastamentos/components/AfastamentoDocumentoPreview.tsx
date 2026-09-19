@@ -1,14 +1,9 @@
 import { useState } from "react";
-import type { AfastamentoDetalhe } from "../types/afastamentos.types";
+import type { AfastamentoDocumentoPreviewProps } from "../types/afastamentos.types";
 import {
   documentoDisplayName,
   documentoPreviewKind,
 } from "../utils/afastamentos.utils";
-
-interface AfastamentoDocumentoPreviewProps {
-  detalhe: AfastamentoDetalhe;
-  canViewDocument: boolean;
-}
 
 export function AfastamentoDocumentoPreview({
   detalhe,

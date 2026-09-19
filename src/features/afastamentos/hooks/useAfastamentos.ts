@@ -1,20 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   assinarDocumentoDigital,
+  buildDevolutivaFormalDocumentoInput,
+  confirmarSenhaUsuario,
   createAfastamento,
   emitirDevolutiva,
   gerarDocumentoDigital,
   getAfastamentoDetalhe,
   listAfastamentos,
   listDevolutivaAlerts,
+  listMedicosParaAvaliacao,
   listServidoresForAfastamento,
   registrarAnalise,
   registrarProvidencia,
   responderComplementacao,
+  validarDocumentoDigital,
 } from "../services/afastamentosService";
 import { afastamentosKeys } from "../services/afastamentosKeys";
 import type {
   AfastamentoFormData,
+  AfastamentoDetalhe,
   AssinarDocumentoDigitalInput,
   EmitirDevolutivaInput,
   GerarDocumentoDigitalInput,
@@ -42,9 +47,20 @@ export function useServidoresForAfastamento(
 }
 
 export function useAfastamentos() {
+  return useScopedAfastamentos([], false);
+}
+
+export function useScopedAfastamentos(
+  unidades: string[],
+  restrictedToAllowedUnidades: boolean,
+) {
   return useQuery({
-    queryKey: afastamentosKeys.list(),
-    queryFn: listAfastamentos,
+    queryKey: afastamentosKeys.list(unidades, restrictedToAllowedUnidades),
+    queryFn: () =>
+      listAfastamentos({
+        allowedUnidades: unidades,
+        restrictedToAllowedUnidades,
+      }),
     staleTime: 1000 * 30,
   });
 }
@@ -61,6 +77,15 @@ export function useAfastamentoDetalhe(
   });
 }
 
+export function useMedicosParaAvaliacao(enabled: boolean) {
+  return useQuery({
+    queryKey: afastamentosKeys.medicosAvaliadores(),
+    queryFn: listMedicosParaAvaliacao,
+    enabled,
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useCreateAfastamento() {
   const queryClient = useQueryClient();
 
@@ -72,6 +97,12 @@ export function useCreateAfastamento() {
         queryKey: afastamentosKeys.devolutivas(),
       });
     },
+  });
+}
+
+export function useConfirmarSenhaUsuario() {
+  return useMutation({
+    mutationFn: (password: string) => confirmarSenhaUsuario(password),
   });
 }
 
@@ -138,6 +169,20 @@ export function useGerarDocumentoDigital() {
   });
 }
 
+export function useGerarDevolutivaFormalDocumento() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (detalhe: AfastamentoDetalhe) =>
+      gerarDocumentoDigital(await buildDevolutivaFormalDocumentoInput(detalhe)),
+    onSuccess: (_data, detalhe) => {
+      queryClient.invalidateQueries({
+        queryKey: afastamentosKeys.detailBase(detalhe.id),
+      });
+    },
+  });
+}
+
 export function useAssinarDocumentoDigital(afastamentoId: string | null) {
   const queryClient = useQueryClient();
 
@@ -179,5 +224,14 @@ export function useDevolutivaAlerts(enabled: boolean) {
     queryFn: listDevolutivaAlerts,
     enabled,
     staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useValidarDocumentoDigital(protocolo: string) {
+  return useQuery({
+    queryKey: afastamentosKeys.validacaoDocumento(protocolo),
+    queryFn: () => validarDocumentoDigital(protocolo),
+    enabled: Boolean(protocolo),
+    retry: false,
   });
 }

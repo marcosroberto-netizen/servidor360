@@ -1,6 +1,6 @@
 # Regras arquiteturais do Servidor 360
 
-Antes de alterar qualquer código, consulte `docs/04-arquitetura/03-arquitetura.md` e preserve suas camadas e fronteiras.
+Antes de alterar qualquer código, consulte `docs/architecture.md` e preserve suas camadas e fronteiras.
 
 ## Regras obrigatórias
 

@@ -1,6 +1,6 @@
 import { createElement, lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { ProtectedRoute } from '@/features/auth'
+import { PERMISSIONS, ProtectedRoute } from '@/features/auth'
 import { PageSkeleton } from '@/shared/components/PageSkeleton'
 
 // Lazy loading das páginas
@@ -8,9 +8,11 @@ const loginPage = lazy(() => import('@/pages/LoginPage'))
 const forgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
 const resetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const portalPage = lazy(() => import('@/pages/PortalPage'))
-const afastamentosPage = lazy(() => import('@/pages/AfastamentosPage'))
-const novoAfastamentoPage = lazy(() => import('@/pages/NovoAfastamentoPage'))
-const validarDocumentoPage = lazy(() => import('@/pages/ValidarDocumentoPage'))
+const afastamentosPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosGeralPage'))
+const afastamentosEducacaoPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosEducacaoPage'))
+const afastamentosCasPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosCasPage'))
+const afastamentosDpPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosDpPage'))
+const validarDocumentoPage = lazy(() => import('@/features/afastamentos/pages/ValidarDocumentoPage'))
 const unauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 
 export const router = createBrowserRouter([
@@ -55,7 +57,7 @@ export const router = createBrowserRouter([
   {
     path: '/afastamentos',
     element: (
-      <ProtectedRoute permission="afastamentos:read">
+      <ProtectedRoute permission={PERMISSIONS.AFASTAMENTOS_READ}>
         <Suspense fallback={<PageSkeleton />}>
           {createElement(afastamentosPage)}
         </Suspense>
@@ -63,11 +65,31 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/afastamentos/novo',
+    path: '/afastamentos/educacao',
     element: (
-      <ProtectedRoute permission="afastamentos:create">
+      <ProtectedRoute permission={PERMISSIONS.EDUCACAO_READ}>
         <Suspense fallback={<PageSkeleton />}>
-          {createElement(novoAfastamentoPage)}
+          {createElement(afastamentosEducacaoPage)}
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/afastamentos/cas',
+    element: (
+      <ProtectedRoute permission={PERMISSIONS.CAS_FILA}>
+        <Suspense fallback={<PageSkeleton />}>
+          {createElement(afastamentosCasPage)}
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/afastamentos/dp',
+    element: (
+      <ProtectedRoute permission={PERMISSIONS.RH_FILA}>
+        <Suspense fallback={<PageSkeleton />}>
+          {createElement(afastamentosDpPage)}
         </Suspense>
       </ProtectedRoute>
     ),
@@ -75,7 +97,7 @@ export const router = createBrowserRouter([
   {
     path: '/validar-documento/:protocolo',
     element: (
-      <ProtectedRoute permission="afastamentos:validar_documento">
+      <ProtectedRoute permission={PERMISSIONS.AFASTAMENTOS_VALIDAR_DOCUMENTO}>
         <Suspense fallback={<PageSkeleton />}>
           {createElement(validarDocumentoPage)}
         </Suspense>
