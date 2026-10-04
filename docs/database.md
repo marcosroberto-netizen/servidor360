@@ -22,7 +22,7 @@ erDiagram
     AFASTAMENTO ||--o{ COMPLEMENTACAO : recebe
     AFASTAMENTO ||--o{ DEVOLUTIVA : produz
     AFASTAMENTO ||--o{ AVALIACAO_MEDICA : atribui
-    MEDICO ||--o{ AVALIACAO_MEDICA : recebe
+    AVALIADOR ||--o{ AVALIACAO_MEDICA : recebe
     AFASTAMENTO ||--o{ PROVIDENCIA : exige
     AFASTAMENTO ||--o{ DOCUMENTO : gera
     DOCUMENTO ||--o{ ASSINATURA : recebe
@@ -36,7 +36,7 @@ erDiagram
 | `organizacional` | `pastas`, `tipos_unidade`, `unidades`, `setores` | Estrutura administrativa |
 | `servidores` | `pessoas`, `servidores`, `cargos`, `funcoes`, `regimes_vinculo`, `vinculos_funcionais`, `lotacoes_funcionais`, `exercicios_funcionais`, `prontuarios` | Cadastro e histórico funcional |
 | `medicos` | `medicos`, `registros_profissionais`, `especialidades`, `medico_especialidades`, `locais_atendimento` | Habilitação médica de servidores |
-| `afastamentos` | `afastamentos`, `movimentacoes`, `complementacoes`, `avaliacoes_medicas`, `devolutivas`, `providencias`, `documentos_digitais`, `assinaturas_digitais`, `notificacoes` | Tramitação do processo, atribuições, notificações e documentos formais |
+| `afastamentos` | `afastamentos`, `movimentacoes`, `complementacoes`, `avaliadores`, `avaliacoes_medicas`, `devolutivas`, `providencias`, `documentos_digitais`, `assinaturas_digitais`, `notificacoes` | Tramitação do processo, atribuições, notificações e documentos formais |
 
 O schema `public` contém fachadas RPC e helpers de autorização. As tabelas de negócio ficam nos schemas proprietários.
 
@@ -64,15 +64,21 @@ As mutações sensíveis ficam atrás de RPCs. Entre as principais estão:
 
 - `get_current_user_authz()`
 - `criar_afastamento(jsonb)`
-- `registrar_triagem_afastamento(..., target_medico_id uuid)`: vincula a
-  avaliação à coluna `afastamentos.avaliacoes_medicas.medico_id`.
+- `list_avaliadores_para_avaliacao()`: lista profissionais ativos, disponíveis
+  e autorizados, ordenados pela menor fila pendente.
+- `encaminhar_avaliacao_afastamento(uuid, uuid, text, boolean)`: vincula uma
+  avaliação a um avaliador específico, registra a movimentação e notifica o
+  usuário atribuído.
 - `registrar_triagem_afastamento(..., target_medico_id uuid,
   permitir_reatribuicao boolean)`: transfere uma avaliação pendente somente
   quando a intenção de reatribuir foi informada explicitamente; preserva a
   atribuição anterior como `cancelada` para auditoria.
 - `list_medicos_para_avaliacao()`
 - `registrar_analise_afastamento(...)`
-- `responder_complementacao_afastamento(...)`
+- `responder_complementacao_afastamento(uuid, text, text, text)`: responde a
+  pendência vinculada ao processo acessível ao usuário, grava documento
+  complementar opcional, registra movimentação e retorna o status para
+  `aguardando_analise`.
 - `emitir_devolutiva_afastamento(...)`
 - `registrar_providencia_afastamento(...)`
 - `gerar_documento_digital_afastamento(...)`
@@ -126,7 +132,8 @@ toda alteração efetiva de `status`:
 - novo atestado enviado pela escola: CAS (`cas:fila`), DP (`rh:fila`) e
   Educação (`educacao:read`);
 - estado alterado: CAS, DP, Educação e o usuário escolar que criou o processo;
-- avaliação médica atribuída: adicionalmente, somente o médico selecionado.
+- avaliação atribuída: adicionalmente, somente o usuário do avaliador
+  selecionado.
 
 O usuário que realizou a ação é removido dos destinatários. A escola é
 representada pelo campo auditável `iniciado_por`, pois o envio é centralizado em

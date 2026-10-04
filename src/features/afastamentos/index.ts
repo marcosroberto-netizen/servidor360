@@ -1,4 +1,10 @@
 export { AfastamentosView } from "./components/AfastamentosView";
+export { default as AfastamentosGeralPage } from "./pages/AfastamentosGeralPage";
+export { default as AfastamentosEducacaoPage } from "./pages/AfastamentosEducacaoPage";
+export { default as AfastamentosCasPage } from "./pages/AfastamentosCasPage";
+export { default as AfastamentosDpPage } from "./pages/AfastamentosDpPage";
+export { default as AfastamentosMedicoPage } from "./pages/AfastamentosMedicoPage";
+export { default as ValidarDocumentoPage } from "./pages/ValidarDocumentoPage";
 export {
   useAfastamentoDetalhe,
   useAssinarDocumentoDigital,
@@ -8,7 +14,8 @@ export {
   useEmitirDevolutiva,
   useGerarDevolutivaFormalDocumento,
   useGerarDocumentoDigital,
-  useMedicosParaAvaliacao,
+  useAvaliadoresParaAvaliacao,
+  useMinhasAvaliacoesAfastamento,
   useRegistrarAnalise,
   useRegistrarProvidencia,
   useResponderComplementacao,
@@ -56,6 +63,8 @@ export type {
   AfastamentoAssinaturaDigital,
   AfastamentoStatusBadgeProps,
   AfastamentoStatus,
+  AvaliadorFila,
+  AvaliadorTipo,
   AnaliseAfastamentoFormProps,
   AssinaturaDigitalRow,
   AssinaturaAtestadoDialogProps,
@@ -71,8 +80,7 @@ export type {
   EmitirDevolutivaInput,
   GerarDocumentoDigitalInput,
   ListServidoresForAfastamentoParams,
-  MedicoFilaAvaliacao,
-  MedicoSelectionDrawerProps,
+  AvaliadorSelectionDrawerProps,
   ListAfastamentosParams,
   NovoAfastamentoFormFields,
   NovoAfastamentoFormProps,

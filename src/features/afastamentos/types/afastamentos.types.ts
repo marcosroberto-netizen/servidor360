@@ -54,14 +54,18 @@ export type TriagemDecisao =
   | "encaminhar_avaliacao"
   | "homologar";
 
-export interface MedicoFilaAvaliacao {
-  medicoId: string;
+export type AvaliadorTipo = "medico" | "perito" | "profissional_autorizado";
+
+export interface AvaliadorFila {
+  avaliadorId: string;
+  tipo: AvaliadorTipo;
   nome: string;
   registroProfissional: string | null;
   especialidade: string | null;
   unidade: string | null;
   pacientesPendentes: number;
 }
+
 
 export interface AfastamentosPageVariantConfig {
   title: string;
@@ -161,11 +165,18 @@ export type AfastamentoStatus =
 
 export type DevolutivaResultado =
   | "apto"
+  | "afastado"
   | "inapto"
   | "apto_com_restricoes"
   | "nova_avaliacao"
   | "complementacao"
   | "outra";
+
+export type AtendimentoDevolutivaResultado =
+  | "apto"
+  | "afastado"
+  | "apto_com_restricoes"
+  | "complementacao";
 
 export interface AfastamentoFormData {
   servidorId: string;
@@ -270,6 +281,21 @@ export interface AfastamentoResumo {
   iniciadoEm: string;
 }
 
+export interface AfastamentoAvaliacaoResumo extends AfastamentoResumo {
+  encaminhadoEm: string;
+}
+
+export interface AtendimentoMedicoFormValues {
+  resultado: AtendimentoDevolutivaResultado | "";
+  observacoes: string;
+  afastamentoInicio: string;
+  afastamentoFim: string;
+  restricoes: string;
+  restricaoInicio: string;
+  restricaoFim: string;
+  complementacao: string;
+}
+
 export interface AfastamentoMovimentacao {
   id: string;
   tipo: string;
@@ -298,6 +324,7 @@ export interface AfastamentoDevolutiva {
   resultado: DevolutivaResultado;
   descricao: string;
   orientacoes: string | null;
+  detalhes: Record<string, unknown>;
   emitidaEm: string;
 }
 
@@ -342,8 +369,8 @@ export interface AfastamentoDocumentoDigital {
 
 export interface AfastamentoDetalhe extends AfastamentoResumo {
   observacoes: string | null;
-  avaliacaoMedicaAtual: {
-    medicoId: string;
+  avaliadorAtual: {
+    avaliadorId: string;
     encaminhadoEm: string;
   } | null;
   movimentacoes: AfastamentoMovimentacao[];
@@ -367,9 +394,9 @@ export interface AfastamentoDetailDialogProps {
   isSigningDocument: boolean;
   analise: string;
   proximaAcao: TriagemDecisao | null;
-  medicosAvaliadores: MedicoFilaAvaliacao[];
-  isLoadingMedicosAvaliadores: boolean;
-  medicoSelecionadoId: string | null;
+  avaliadores: AvaliadorFila[];
+  isLoadingAvaliadores: boolean;
+  avaliadorSelecionadoId: string | null;
   resposta: string;
   documentoArquivo: File | null;
   resultado: DevolutivaResultado;
@@ -381,7 +408,7 @@ export interface AfastamentoDetailDialogProps {
   onClose: () => void;
   onAnaliseChange: (value: string) => void;
   onProximaAcaoChange: (value: TriagemDecisao) => void;
-  onMedicoSelecionadoChange: (value: string | null) => void;
+  onAvaliadorSelecionadoChange: (value: string | null) => void;
   onRespostaChange: (value: string) => void;
   onDocumentoChange: (value: File | null) => void;
   onResultadoChange: (value: DevolutivaResultado) => void;
@@ -429,23 +456,23 @@ export interface AfastamentoDocumentoPreviewProps {
 export interface AnaliseAfastamentoFormProps {
   analise: string;
   proximaAcao: TriagemDecisao | null;
-  medicos: MedicoFilaAvaliacao[];
-  isLoadingMedicos: boolean;
-  medicoSelecionadoId: string | null;
-  medicoAtualId: string | null;
+  avaliadores: AvaliadorFila[];
+  isLoadingAvaliadores: boolean;
+  avaliadorSelecionadoId: string | null;
+  avaliadorAtualId: string | null;
   onAnaliseChange: (value: string) => void;
   onProximaAcaoChange: (value: TriagemDecisao) => void;
-  onMedicoSelecionadoChange: (value: string | null) => void;
+  onAvaliadorSelecionadoChange: (value: string | null) => void;
   onSubmit: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
 }
 
-export interface MedicoSelectionDrawerProps {
-  medicos: MedicoFilaAvaliacao[];
-  selectedMedicoId: string | null;
-  currentMedicoId?: string | null;
+export interface AvaliadorSelectionDrawerProps {
+  avaliadores: AvaliadorFila[];
+  selectedAvaliadorId: string | null;
+  currentAvaliadorId?: string | null;
   isLoading: boolean;
   onClose: () => void;
-  onConfirm: (medicoId: string) => void;
+  onConfirm: (avaliadorId: string) => void;
 }
 
 export interface ComplementacaoAfastamentoFormProps {
@@ -489,7 +516,7 @@ export interface RegistrarAnaliseInput {
   afastamentoId: string;
   analise: string;
   proximaAcao: TriagemDecisao;
-  medicoId?: string;
+  avaliadorId?: string;
   permitirReatribuicao?: boolean;
 }
 
@@ -505,6 +532,7 @@ export interface EmitirDevolutivaInput {
   descricao: string;
   orientacoes?: string;
   encaminharRh: boolean;
+  detalhes?: Record<string, unknown>;
 }
 
 export interface RegistrarProvidenciaInput {

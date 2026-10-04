@@ -12,6 +12,7 @@ import {
   History,
   MapPin,
   PenLine,
+  MessageSquareWarning,
   SearchCheck,
   Send,
   Stethoscope,
@@ -23,11 +24,18 @@ import {
   STATUS_LABELS,
 } from "../constants/afastamentos.constants";
 import type {
+  AfastamentoComplementacao,
   AfastamentoDetailDialogProps,
   AfastamentoMovimentacao,
   AfastamentoStatus,
 } from "../types/afastamentos.types";
-import { formatDate, formatDateTime } from "../utils/afastamentos.utils";
+import {
+  canAnalyzeAfastamento,
+  canIssueReturnAfastamento,
+  canRegisterProvidenceAfastamento,
+  formatDate,
+  formatDateTime,
+} from "../utils/afastamentos.utils";
 import { AfastamentoDocumentoPreview } from "./AfastamentoDocumentoPreview";
 import { AfastamentoCofreDigital } from "./AfastamentoCofreDigital";
 import { AnaliseAfastamentoForm } from "./AnaliseAfastamentoForm";
@@ -72,7 +80,7 @@ function HistoryDescription({ description }: { description: string }) {
 
   if (markerIndex < 0) {
     return (
-      <p className="mt-1 whitespace-pre-line break-words text-sm leading-6 text-slate-700">
+      <p className="mt-1 whitespace-pre-line wrap-break-word text-sm leading-6 text-slate-700">
         {description}
       </p>
     );
@@ -83,7 +91,7 @@ function HistoryDescription({ description }: { description: string }) {
 
   return (
     <div className="mt-1 text-sm leading-6 text-slate-700">
-      {context ? <p className="whitespace-pre-line break-words">{context}</p> : null}
+      {context ? <p className="whitespace-pre-line wrap-break-word">{context}</p> : null}
       <div className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-1">
         <span className="font-medium text-slate-600">Comentários:</span>
         <span className="group/comment relative min-w-0">
@@ -106,6 +114,43 @@ function HistoryDescription({ description }: { description: string }) {
   );
 }
 
+function PendingComplementacaoRequest({
+  complementacao,
+}: {
+  complementacao: AfastamentoComplementacao;
+}) {
+  return (
+    <section
+      className="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm"
+      aria-labelledby="pending-complementacao-title"
+    >
+      <div className="border-b border-amber-200 bg-amber-50/80 px-5 py-4">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-amber-700 shadow-sm ring-1 ring-amber-200">
+            <MessageSquareWarning className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h3 id="pending-complementacao-title" className="text-sm font-semibold text-amber-950">
+              Solicitação de complementação
+            </h3>
+            <p className="mt-0.5 text-xs leading-5 text-amber-900/75">
+              Revise a pendência registrada pelo CAS antes de responder.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-3 p-5">
+        <p className="whitespace-pre-line wrap-break-word text-sm leading-6 text-slate-800">
+          {complementacao.solicitacao}
+        </p>
+        <p className="text-xs font-medium tabular-nums text-slate-500">
+          Solicitada em {formatDateTime(complementacao.solicitadaEm)}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
   const [isCofreOpen, setIsCofreOpen] = useState(false);
   const {
@@ -121,7 +166,14 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
     onClose,
   } = props;
   const hasActions =
-    canAnalyze || canComplement || canIssueReturn || canRegisterProvidence;
+    Boolean(
+      detalhe &&
+        ((canAnalyze && canAnalyzeAfastamento(detalhe.status)) ||
+          (canComplement && detalhe.status === "aguardando_complementacao") ||
+          (canIssueReturn && canIssueReturnAfastamento(detalhe.status)) ||
+          (canRegisterProvidence &&
+            canRegisterProvidenceAfastamento(detalhe.status))),
+    );
   const [activeSection, setActiveSection] = useState<
     "overview" | "actions" | "history"
   >("overview");
@@ -146,11 +198,15 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
   );
   const summaryMovements =
     detalhe?.movimentacoes.filter((item) => !groupedMovementIds.has(item.id)) ?? [];
+  const pendingComplementacao =
+    detalhe?.complementacoes.find((item) => item.status === "pendente") ?? null;
   const hasAvailableAction = Boolean(
-    canAnalyze ||
+    (canAnalyze && detalhe && canAnalyzeAfastamento(detalhe.status)) ||
       (canComplement && detalhe?.status === "aguardando_complementacao") ||
-      canIssueReturn ||
-      canRegisterProvidence,
+    (canIssueReturn && detalhe && canIssueReturnAfastamento(detalhe.status)) ||
+    (canRegisterProvidence &&
+      detalhe &&
+      canRegisterProvidenceAfastamento(detalhe.status)),
   );
 
   return (
@@ -265,7 +321,7 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
                       </div>
                     </div>
                     <div className="p-5">
-                      <p className="break-words text-sm leading-6 text-slate-700">
+                      <p className="wrap-break-word text-sm leading-6 text-slate-700">
                         {detalhe.motivo ?? "-"}
                       </p>
                       <AfastamentoDocumentoPreview
@@ -289,30 +345,53 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
 
               {activeSection === "actions" ? (
                 <div className="mx-auto grid max-w-4xl min-w-0 gap-4">
-                  {canAnalyze && (
+                  {canAnalyze && canAnalyzeAfastamento(detalhe.status) && (
                     <AnaliseAfastamentoForm
                       analise={props.analise}
                       proximaAcao={props.proximaAcao}
-                      medicos={props.medicosAvaliadores}
-                      isLoadingMedicos={props.isLoadingMedicosAvaliadores}
-                      medicoSelecionadoId={props.medicoSelecionadoId}
-                      medicoAtualId={detalhe.avaliacaoMedicaAtual?.medicoId ?? null}
+                      avaliadores={props.avaliadores}
+                      isLoadingAvaliadores={props.isLoadingAvaliadores}
+                      avaliadorSelecionadoId={props.avaliadorSelecionadoId}
+                      avaliadorAtualId={detalhe.avaliadorAtual?.avaliadorId ?? null}
                       onAnaliseChange={props.onAnaliseChange}
                       onProximaAcaoChange={props.onProximaAcaoChange}
-                      onMedicoSelecionadoChange={props.onMedicoSelecionadoChange}
+                      onAvaliadorSelecionadoChange={props.onAvaliadorSelecionadoChange}
                       onSubmit={props.onSubmitAnalise}
                     />
                   )}
                   {canComplement &&
                     detalhe.status === "aguardando_complementacao" && (
-                      <ComplementacaoAfastamentoForm
-                        resposta={props.resposta}
-                        onRespostaChange={props.onRespostaChange}
-                        onDocumentoChange={props.onDocumentoChange}
-                        onSubmit={props.onSubmitComplementacao}
-                      />
+                      <>
+                        {pendingComplementacao ? (
+                          <>
+                            <PendingComplementacaoRequest
+                              complementacao={pendingComplementacao}
+                            />
+                            <ComplementacaoAfastamentoForm
+                              resposta={props.resposta}
+                              onRespostaChange={props.onRespostaChange}
+                              onDocumentoChange={props.onDocumentoChange}
+                              onSubmit={props.onSubmitComplementacao}
+                            />
+                          </>
+                        ) : (
+                          <section className="rounded-lg border border-amber-200 bg-amber-50/80 p-5">
+                            <div className="flex items-start gap-3">
+                              <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+                              <div className="min-w-0">
+                                <h3 className="text-sm font-semibold text-amber-950">
+                                  Solicitação não localizada
+                                </h3>
+                                <p className="mt-1 text-sm leading-6 text-amber-900/80">
+                                  O processo está aguardando complementação, mas a pendência não foi carregada. Atualize a tela antes de responder.
+                                </p>
+                              </div>
+                            </div>
+                          </section>
+                        )}
+                      </>
                     )}
-                  {canIssueReturn && (
+                  {canIssueReturn && canIssueReturnAfastamento(detalhe.status) && (
                     <DevolutivaAfastamentoForm
                       resultado={props.resultado}
                       descricao={props.descricao}
@@ -325,7 +404,8 @@ export function AfastamentoDetailDialog(props: AfastamentoDetailDialogProps) {
                       onSubmit={props.onSubmitDevolutiva}
                     />
                   )}
-                  {canRegisterProvidence && (
+                  {canRegisterProvidence &&
+                    canRegisterProvidenceAfastamento(detalhe.status) && (
                     <ProvidenciaAfastamentoForm
                       providencia={props.providencia}
                       concluir={props.concluir}
@@ -465,8 +545,8 @@ function HistoryItem({
       : humanizeHistoryDescription(item.descricao);
 
   return (
-    <article className="relative min-w-0 border-l-2 border-blue-200 py-1 pl-5 before:absolute before:-left-[5px] before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-600 before:ring-4 before:ring-blue-50">
-      <p className="break-words text-sm font-semibold text-slate-950">
+    <article className="relative min-w-0 border-l-2 border-blue-200 py-1 pl-5 before:absolute before:-left-1.25 before:top-2 before:h-2 before:w-2 before:rounded-full before:bg-blue-600 before:ring-4 before:ring-blue-50">
+      <p className="wrap-break-word text-sm font-semibold text-slate-950">
         {item.titulo}
       </p>
       {description ? (
@@ -491,7 +571,7 @@ function HistoryItem({
               <div key={event.id}>
                 <p className="text-xs font-semibold text-slate-800">{event.titulo}</p>
                 {event.descricao ? (
-                  <p className="mt-0.5 break-words text-xs leading-5 text-slate-600">
+                  <p className="mt-0.5 wrap-break-word text-xs leading-5 text-slate-600">
                     {humanizeHistoryDescription(event.descricao)}
                   </p>
                 ) : null}
@@ -567,7 +647,7 @@ function Info({
         <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           {label}
         </dt>
-        <dd className="mt-1 break-words text-sm font-medium text-slate-950">
+        <dd className="mt-1 wrap-break-word text-sm font-medium text-slate-950">
           {children}
         </dd>
       </div>

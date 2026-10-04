@@ -36,7 +36,35 @@ pnpm build
 pnpm preview
 ```
 
-O repositório não possui script de teste automatizado nem arquivos de testes reconhecidos pelo inventário atual. Valide manualmente login, recuperação de senha, escopo por unidade, criação de afastamento, documento, assinatura, devolutiva e validação por protocolo.
+## Testes E2E no navegador
+
+O projeto usa Playwright para testes funcionais E2E no navegador. Na primeira execução da máquina, instale o Chromium usado pelo Playwright:
+
+```bash
+pnpm test:e2e:install
+```
+
+Para validar o login das contas documentadas em modo automatizado:
+
+```bash
+pnpm test:e2e:login
+```
+
+Para acompanhar o teste ao vivo, com a janela do navegador visível:
+
+```bash
+pnpm test:e2e:login:headed
+```
+
+Para abrir a interface interativa do Playwright, útil durante investigação no VS Code:
+
+```bash
+pnpm test:e2e:ui
+```
+
+Os testes sobem o Vite automaticamente em `http://127.0.0.1:5173`. A senha padrão usada no teste de login é a senha documentada em `docs/usuarios-teste.md`; se necessário, sobrescreva com `E2E_TEST_PASSWORD`.
+
+Além dos testes automatizados, valide manualmente recuperação de senha, escopo por unidade, criação de afastamento, documento, assinatura, devolutiva e validação por protocolo quando essas áreas forem alteradas.
 
 ## Alterar o banco
 

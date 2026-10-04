@@ -16,7 +16,7 @@ import {
   useAssinarDocumentoDigital,
   useEmitirDevolutiva,
   useGerarDevolutivaFormalDocumento,
-  useMedicosParaAvaliacao,
+  useAvaliadoresParaAvaliacao,
   useRegistrarAnalise,
   useRegistrarProvidencia,
   useResponderComplementacao,
@@ -57,7 +57,7 @@ export function AfastamentosView({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [analise, setAnalise] = useState("");
   const [proximaAcao, setProximaAcao] = useState<TriagemDecisao | null>(null);
-  const [medicoSelecionadoId, setMedicoSelecionadoId] = useState<string | null>(null);
+  const [avaliadorSelecionadoId, setAvaliadorSelecionadoId] = useState<string | null>(null);
   const [resposta, setResposta] = useState("");
   const [documentoArquivo, setDocumentoArquivo] = useState<File | null>(null);
   const [resultado, setResultado] = useState<DevolutivaResultado>("apto");
@@ -91,8 +91,8 @@ export function AfastamentosView({
   const registrarProvidencia = useRegistrarProvidencia();
   const permissions = authorization.permissions;
   const actionPermissions = getAfastamentosActionPermissions(permissions);
-  const { data: medicosAvaliadores = [], isLoading: isLoadingMedicosAvaliadores } =
-    useMedicosParaAvaliacao(Boolean(selectedId && actionPermissions.canAnalyze));
+  const { data: avaliadores = [], isLoading: isLoadingAvaliadores } =
+    useAvaliadoresParaAvaliacao(Boolean(selectedId && actionPermissions.canAnalyze));
   const canCreate = hasPermission(
     permissions,
     AFASTAMENTOS_PERMISSIONS.CREATE,
@@ -125,15 +125,15 @@ export function AfastamentosView({
     registrarProvidencia.isPending;
   const submitAnalise = (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     event.preventDefault();
-    const isReassignment = Boolean(detalhe?.avaliacaoMedicaAtual);
+    const isReassignment = Boolean(detalhe?.avaliadorAtual);
     const action = isReassignment ? "encaminhar_avaliacao" : proximaAcao;
     if (!detalhe || !action || !analise.trim()) return;
-    if (action === "encaminhar_avaliacao" && !medicoSelecionadoId) {
-      setErrorMessage("Selecione o médico responsável pela avaliação antes de continuar.");
+    if (action === "encaminhar_avaliacao" && !avaliadorSelecionadoId) {
+      setErrorMessage("Selecione o profissional responsável pela avaliação antes de continuar.");
       return;
     }
-    if (detalhe.avaliacaoMedicaAtual?.medicoId === medicoSelecionadoId) {
-      setErrorMessage("Este processo já está atribuído a esse médico. Escolha outro profissional.");
+    if (detalhe.avaliadorAtual?.avaliadorId === avaliadorSelecionadoId) {
+      setErrorMessage("Este processo já está atribuído a esse profissional. Escolha outro avaliador.");
       return;
     }
     setPendingAction("analise");
@@ -217,7 +217,7 @@ export function AfastamentosView({
     setPendingAction(null);
 
     if (action === "analise") {
-      const isReassignment = Boolean(detalhe.avaliacaoMedicaAtual);
+      const isReassignment = Boolean(detalhe.avaliadorAtual);
       const selectedAction = isReassignment ? "encaminhar_avaliacao" : proximaAcao;
       if (!selectedAction) return;
       registrarAnalise.mutate(
@@ -225,14 +225,14 @@ export function AfastamentosView({
           afastamentoId: detalhe.id,
           analise,
           proximaAcao: selectedAction,
-          medicoId: medicoSelecionadoId ?? undefined,
+          avaliadorId: avaliadorSelecionadoId ?? undefined,
           permitirReatribuicao: isReassignment,
         },
         {
           onSuccess: () => {
             setAnalise("");
             setProximaAcao(null);
-            setMedicoSelecionadoId(null);
+            setAvaliadorSelecionadoId(null);
             if (isReassignment) {
               setPendingAction(null);
               setErrorMessage(null);
@@ -299,7 +299,7 @@ export function AfastamentosView({
   };
   const confirmation = pendingAction ? ACTION_FEEDBACK[pendingAction] : null;
   const isMedicalReassignment = Boolean(
-    pendingAction === "analise" && detalhe?.avaliacaoMedicaAtual,
+    pendingAction === "analise" && detalhe?.avaliadorAtual,
   );
   const currentPage = PAGE_VARIANT_CONFIG[variant];
   const navItems = isOperationalPage
@@ -412,9 +412,9 @@ export function AfastamentosView({
           isSigningDocument={assinarDocumentoDigital.isPending}
           analise={analise}
           proximaAcao={proximaAcao}
-          medicosAvaliadores={medicosAvaliadores}
-          isLoadingMedicosAvaliadores={isLoadingMedicosAvaliadores}
-          medicoSelecionadoId={medicoSelecionadoId}
+          avaliadores={avaliadores}
+          isLoadingAvaliadores={isLoadingAvaliadores}
+          avaliadorSelecionadoId={avaliadorSelecionadoId}
           resposta={resposta}
           documentoArquivo={documentoArquivo}
           resultado={resultado}
@@ -427,9 +427,9 @@ export function AfastamentosView({
           onAnaliseChange={setAnalise}
           onProximaAcaoChange={(value) => {
             setProximaAcao(value);
-            if (value !== "encaminhar_avaliacao") setMedicoSelecionadoId(null);
+            if (value !== "encaminhar_avaliacao") setAvaliadorSelecionadoId(null);
           }}
-          onMedicoSelecionadoChange={setMedicoSelecionadoId}
+          onAvaliadorSelecionadoChange={setAvaliadorSelecionadoId}
           onRespostaChange={setResposta}
           onDocumentoChange={handleDocumentoComplementacaoChange}
           onResultadoChange={setResultado}

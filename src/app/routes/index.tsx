@@ -8,11 +8,36 @@ const loginPage = lazy(() => import('@/pages/LoginPage'))
 const forgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
 const resetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const portalPage = lazy(() => import('@/pages/PortalPage'))
-const afastamentosPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosGeralPage'))
-const afastamentosEducacaoPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosEducacaoPage'))
-const afastamentosCasPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosCasPage'))
-const afastamentosDpPage = lazy(() => import('@/features/afastamentos/pages/AfastamentosDpPage'))
-const validarDocumentoPage = lazy(() => import('@/features/afastamentos/pages/ValidarDocumentoPage'))
+const afastamentosPage = lazy(() =>
+  import('@/features/afastamentos').then(({ AfastamentosGeralPage }) => ({
+    default: AfastamentosGeralPage,
+  })),
+)
+const afastamentosEducacaoPage = lazy(() =>
+  import('@/features/afastamentos').then(({ AfastamentosEducacaoPage }) => ({
+    default: AfastamentosEducacaoPage,
+  })),
+)
+const afastamentosCasPage = lazy(() =>
+  import('@/features/afastamentos').then(({ AfastamentosCasPage }) => ({
+    default: AfastamentosCasPage,
+  })),
+)
+const afastamentosDpPage = lazy(() =>
+  import('@/features/afastamentos').then(({ AfastamentosDpPage }) => ({
+    default: AfastamentosDpPage,
+  })),
+)
+const afastamentosMedicoPage = lazy(() =>
+  import('@/features/afastamentos').then(({ AfastamentosMedicoPage }) => ({
+    default: AfastamentosMedicoPage,
+  })),
+)
+const validarDocumentoPage = lazy(() =>
+  import('@/features/afastamentos').then(({ ValidarDocumentoPage }) => ({
+    default: ValidarDocumentoPage,
+  })),
+)
 const unauthorizedPage = lazy(() => import('@/pages/UnauthorizedPage'))
 
 export const router = createBrowserRouter([
@@ -80,6 +105,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute permission={PERMISSIONS.CAS_FILA}>
         <Suspense fallback={<PageSkeleton />}>
           {createElement(afastamentosCasPage)}
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/afastamentos/medico',
+    element: (
+      <ProtectedRoute permission={PERMISSIONS.AFASTAMENTOS_AVALIAR}>
+        <Suspense fallback={<PageSkeleton />}>
+          {createElement(afastamentosMedicoPage)}
         </Suspense>
       </ProtectedRoute>
     ),

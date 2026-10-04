@@ -1,10 +1,12 @@
-import { PERMISSIONS } from '../constants/auth.constants'
+import { MEDICO_PERMISSIONS, PERMISSIONS } from '../constants/auth.constants'
 import { useAuth } from './authContext'
 import { useCurrentUserAuthz } from '../services/useAuth'
 import type { Permission, PermissionString } from '../types/auth.types'
 
 function hasPermission(perfis: string[], permissoes: PermissionString[], permission: Permission): boolean {
-  void perfis
+  if (perfis.includes('medico') && !perfis.includes('administrador')) {
+    return MEDICO_PERMISSIONS.some((allowed) => allowed === permission) && permissoes.includes(permission)
+  }
   if (permissoes.includes(PERMISSIONS.ADMIN)) return true
 
   return permissoes.includes(permission)

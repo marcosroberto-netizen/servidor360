@@ -9,7 +9,8 @@ import {
   getAfastamentoDetalhe,
   listAfastamentos,
   listDevolutivaAlerts,
-  listMedicosParaAvaliacao,
+  listMinhasAvaliacoesAfastamento,
+  listAvaliadoresParaAvaliacao,
   listServidoresForAfastamento,
   registrarAnalise,
   registrarProvidencia,
@@ -65,6 +66,14 @@ export function useScopedAfastamentos(
   });
 }
 
+export function useMinhasAvaliacoesAfastamento() {
+  return useQuery({
+    queryKey: afastamentosKeys.minhasAvaliacoes(),
+    queryFn: listMinhasAvaliacoesAfastamento,
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useAfastamentoDetalhe(
   id: string | null,
   includeDocumentoUrl = false,
@@ -77,14 +86,15 @@ export function useAfastamentoDetalhe(
   });
 }
 
-export function useMedicosParaAvaliacao(enabled: boolean) {
+export function useAvaliadoresParaAvaliacao(enabled: boolean) {
   return useQuery({
-    queryKey: afastamentosKeys.medicosAvaliadores(),
-    queryFn: listMedicosParaAvaliacao,
+    queryKey: afastamentosKeys.avaliadores(),
+    queryFn: listAvaliadoresParaAvaliacao,
     enabled,
     staleTime: 1000 * 30,
   });
 }
+
 
 export function useCreateAfastamento() {
   const queryClient = useQueryClient();
@@ -113,6 +123,9 @@ export function useRegistrarAnalise() {
     mutationFn: (input: RegistrarAnaliseInput) => registrarAnalise(input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: afastamentosKeys.listas() });
+      queryClient.invalidateQueries({
+        queryKey: afastamentosKeys.minhasAvaliacoes(),
+      });
       queryClient.invalidateQueries({
         queryKey: afastamentosKeys.detailBase(variables.afastamentoId),
       });

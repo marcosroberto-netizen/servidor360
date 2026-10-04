@@ -134,7 +134,7 @@ function Info({ label, children }: { label: string; children: ReactNode }) {
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </dt>
-      <dd className="mt-1 break-words text-sm font-semibold text-slate-950">
+      <dd className="mt-1 wrap-break-word text-sm font-semibold text-slate-950">
         {children}
       </dd>
     </div>

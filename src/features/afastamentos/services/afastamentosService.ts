@@ -2,6 +2,7 @@ import { supabase } from "@/shared/lib/supabase";
 import type {
   AfastamentoComplementacao,
   AfastamentoDetalhe,
+  AfastamentoAvaliacaoResumo,
   AfastamentoDocumentoDigital,
   AfastamentoDevolutiva,
   AfastamentoFormData,
@@ -12,6 +13,7 @@ import type {
   AfastamentoStatus,
   AssinaturaDigitalRow,
   AssinarDocumentoDigitalInput,
+  AvaliadorFila,
   DevolutivaAlert,
   DocumentoDigitalRow,
   EmitirDevolutivaInput,
@@ -19,25 +21,17 @@ import type {
   ListServidoresForAfastamentoParams,
   ListAfastamentosParams,
   NovoAfastamentoFormFields,
-  MedicoFilaAvaliacao,
   RegistrarAnaliseInput,
   RegistrarProvidenciaInput,
   ResponderComplementacaoInput,
   ServidorOption,
-  TriagemDecisao,
-  TriagemResultado,
   ValidacaoDocumentoDigital,
 } from "../types/afastamentos.types";
 
 const documentosBucket = "afastamentos-documentos";
-const resultadoPorDecisao: Record<TriagemDecisao, TriagemResultado> = {
-  solicitar_complementacao: "documentacao_incompleta",
-  encaminhar_avaliacao: "necessita_avaliacao_medica",
-  homologar: "homologado",
-};
-
-interface MedicoFilaAvaliacaoRow {
-  medico_id: string;
+interface AvaliadorFilaRow {
+  avaliador_id: string;
+  tipo: "medico" | "perito" | "profissional_autorizado";
   nome: string;
   registro_profissional: string | null;
   especialidade: string | null;
@@ -109,6 +103,10 @@ async function uploadDocumento(file: File, prefix: string, fileName: string) {
   if (error) throw error;
 
   return data.path;
+}
+
+async function removeDocumento(path: string) {
+  await supabase.storage.from(documentosBucket).remove([path]);
 }
 
 async function createSignedDocumentoUrl(path: string | null) {
@@ -368,24 +366,29 @@ export async function createAfastamento(
       )
     : null;
 
-  const { data, error } = await supabase.rpc("criar_afastamento", {
-    input: {
-      servidorId: input.servidorId,
-      vinculoId: input.vinculoId,
-      tipo: input.tipo,
-      dataInicio: input.dataInicio,
-      dataFim: input.dataFim,
-      motivo: input.motivo,
-      observacoes: input.observacoes ?? "",
-      documentoNome: documentoNome ?? "",
-      documentoUrl: uploadedPath ?? "",
-      documentoTipo: input.documentoArquivo?.type ?? "",
-    },
-  });
+  try {
+    const { data, error } = await supabase.rpc("criar_afastamento", {
+      input: {
+        servidorId: input.servidorId,
+        vinculoId: input.vinculoId,
+        tipo: input.tipo,
+        dataInicio: input.dataInicio,
+        dataFim: input.dataFim,
+        motivo: input.motivo,
+        observacoes: input.observacoes ?? "",
+        documentoNome: documentoNome ?? "",
+        documentoUrl: uploadedPath ?? "",
+        documentoTipo: input.documentoArquivo?.type ?? "",
+      },
+    });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data as string;
+    return data as string;
+  } catch (error) {
+    if (uploadedPath) await removeDocumento(uploadedPath);
+    throw error;
+  }
 }
 
 export async function listAfastamentos({
@@ -436,6 +439,26 @@ export async function listAfastamentos({
   );
 }
 
+export async function listMinhasAvaliacoesAfastamento(): Promise<
+  AfastamentoAvaliacaoResumo[]
+> {
+  const { data, error } = await supabase.rpc("list_minhas_avaliacoes_afastamento");
+
+  if (error) throw error;
+
+  const rows = (data ?? []) as (AfastamentoRow & {
+    encaminhado_em: string;
+  })[];
+  const vinculos = await getVinculosById(
+    rows.map((row) => row.vinculo_funcional_id),
+  );
+
+  return rows.map((row) => ({
+    ...mapAfastamento(row, vinculos.get(row.vinculo_funcional_id)),
+    encaminhadoEm: row.encaminhado_em,
+  }));
+}
+
 export async function getAfastamentoDetalhe(
   id: string,
   includeDocumentoUrl = false,
@@ -484,7 +507,7 @@ export async function getAfastamentoDetalhe(
     supabase
       .schema("afastamentos")
       .from("devolutivas")
-      .select("id, resultado, descricao, orientacoes, emitida_em")
+      .select("id, resultado, descricao, orientacoes, detalhes, emitida_em")
       .eq("afastamento_id", id)
       .order("emitida_em", { ascending: false }),
     supabase
@@ -504,7 +527,7 @@ export async function getAfastamentoDetalhe(
     supabase
       .schema("afastamentos")
       .from("avaliacoes_medicas")
-      .select("medico_id, encaminhado_em")
+      .select("avaliador_id, encaminhado_em")
       .eq("afastamento_id", id)
       .eq("status", "pendente")
       .maybeSingle(),
@@ -546,9 +569,9 @@ export async function getAfastamentoDetalhe(
   return {
     ...resumo,
     observacoes: row.observacoes ?? null,
-    avaliacaoMedicaAtual: avaliacaoMedicaResult.data
+    avaliadorAtual: avaliacaoMedicaResult.data
       ? {
-          medicoId: avaliacaoMedicaResult.data.medico_id,
+          avaliadorId: avaliacaoMedicaResult.data.avaliador_id,
           encaminhadoEm: avaliacaoMedicaResult.data.encaminhado_em,
         }
       : null,
@@ -578,6 +601,7 @@ export async function getAfastamentoDetalhe(
       resultado: item.resultado,
       descricao: item.descricao,
       orientacoes: item.orientacoes,
+      detalhes: item.detalhes ?? {},
       emitidaEm: item.emitida_em,
     })) satisfies AfastamentoDevolutiva[],
     providencias: (providenciasResult.data ?? []).map((item) => ({
@@ -645,43 +669,51 @@ export async function validarDocumentoDigital(
 }
 
 export async function registrarAnalise(input: RegistrarAnaliseInput) {
-  if (input.proximaAcao === "encaminhar_avaliacao" && !input.medicoId) {
-    throw new Error("Selecione um médico para encaminhar a avaliação.");
-  }
+  const { error } =
+    input.proximaAcao === "encaminhar_avaliacao"
+      ? await (async () => {
+          if (!input.avaliadorId) {
+            throw new Error("Selecione o profissional para encaminhar a avaliação.");
+          }
 
-  const { error } = await supabase.rpc("registrar_triagem_afastamento", {
-    target_afastamento_id: input.afastamentoId,
-    resultado: resultadoPorDecisao[input.proximaAcao],
-    encaminhamento: input.proximaAcao,
-    comentarios: input.analise,
-    complemento:
-      input.proximaAcao === "solicitar_complementacao"
-        ? input.analise
-        : null,
-    target_medico_id:
-      input.proximaAcao === "encaminhar_avaliacao" ? input.medicoId : null,
-    permitir_reatribuicao: input.permitirReatribuicao ?? false,
-  });
+          return supabase.rpc("encaminhar_avaliacao_afastamento", {
+            target_afastamento_id: input.afastamentoId,
+            target_avaliador_id: input.avaliadorId,
+            comentarios: input.analise,
+            permitir_reatribuicao: input.permitirReatribuicao ?? false,
+          });
+        })()
+      : await supabase.rpc("registrar_analise_afastamento", {
+          target_afastamento_id: input.afastamentoId,
+          analise: input.analise,
+          proxima_acao: input.proximaAcao,
+          complemento:
+            input.proximaAcao === "solicitar_complementacao"
+              ? input.analise
+              : null,
+        });
 
   if (error) throw error;
 }
 
-export async function listMedicosParaAvaliacao(): Promise<
-  MedicoFilaAvaliacao[]
+export async function listAvaliadoresParaAvaliacao(): Promise<
+  AvaliadorFila[]
 > {
-  const { data, error } = await supabase.rpc("list_medicos_para_avaliacao");
+  const { data, error } = await supabase.rpc("list_avaliadores_para_avaliacao");
 
   if (error) throw error;
 
-  return ((data ?? []) as MedicoFilaAvaliacaoRow[]).map((medico) => ({
-    medicoId: medico.medico_id,
-    nome: medico.nome,
-    registroProfissional: medico.registro_profissional,
-    especialidade: medico.especialidade,
-    unidade: medico.unidade,
-    pacientesPendentes: Number(medico.pacientes_pendentes),
+  return ((data ?? []) as AvaliadorFilaRow[]).map((avaliador) => ({
+    avaliadorId: avaliador.avaliador_id,
+    tipo: avaliador.tipo,
+    nome: avaliador.nome,
+    registroProfissional: avaliador.registro_profissional,
+    especialidade: avaliador.especialidade,
+    unidade: avaliador.unidade,
+    pacientesPendentes: Number(avaliador.pacientes_pendentes),
   }));
 }
+
 
 export async function responderComplementacao(
   input: ResponderComplementacaoInput,
@@ -714,14 +746,19 @@ export async function responderComplementacao(
       )
     : null;
 
-  const { error } = await supabase.rpc("responder_complementacao_afastamento", {
-    target_afastamento_id: input.afastamentoId,
-    resposta: input.resposta,
-    documento_nome: documentoNome,
-    documento_url: uploadedPath ?? null,
-  });
+  try {
+    const { error } = await supabase.rpc("responder_complementacao_afastamento", {
+      target_afastamento_id: input.afastamentoId,
+      resposta: input.resposta,
+      documento_nome: documentoNome,
+      documento_url: uploadedPath ?? null,
+    });
 
-  if (error) throw error;
+    if (error) throw error;
+  } catch (error) {
+    if (uploadedPath) await removeDocumento(uploadedPath);
+    throw error;
+  }
 }
 
 export async function emitirDevolutiva(input: EmitirDevolutivaInput) {
@@ -731,6 +768,7 @@ export async function emitirDevolutiva(input: EmitirDevolutivaInput) {
     descricao: input.descricao,
     orientacoes: input.orientacoes ?? null,
     encaminhar_rh: input.encaminharRh,
+    detalhes: input.detalhes ?? {},
   });
 
   if (error) throw error;

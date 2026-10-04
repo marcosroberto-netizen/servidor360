@@ -189,6 +189,28 @@ export default function PortalPage() {
             </div>
           </Can>
 
+          <Can permission={PERMISSIONS.AFASTAMENTOS_AVALIAR}>
+            <div className="flex min-h-[172px] flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-50">
+                  <svg className="h-5 w-5 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5 2a8 8 0 11-16 0 8 8 0 0116 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-semibold text-slate-950">Atendimento Médico</h3>
+              </div>
+              <p className="mb-4 text-sm leading-5 text-slate-600">
+                Atenda processos encaminhados pelo CAS e registre a devolutiva pericial.
+              </p>
+              <Link
+                to="/afastamentos/medico"
+                className="mt-auto flex h-9 w-full items-center justify-center rounded-md bg-cyan-700 px-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2"
+              >
+                Acessar Atendimento
+              </Link>
+            </div>
+          </Can>
+
           <Can permission={PERMISSIONS.RH_FILA}>
             <div className="flex min-h-[172px] flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-center gap-3">

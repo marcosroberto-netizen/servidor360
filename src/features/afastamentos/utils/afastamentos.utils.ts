@@ -3,7 +3,10 @@ import {
   AFASTAMENTOS_PERMISSIONS,
   MAX_DOCUMENTO_SIZE,
 } from "../constants/afastamentos.constants";
-import type { AfastamentosActionPermissions } from "../types/afastamentos.types";
+import type {
+  AfastamentoStatus,
+  AfastamentosActionPermissions,
+} from "../types/afastamentos.types";
 export function hasPermission(
   permissions: string[],
   permission: string,
@@ -55,6 +58,24 @@ export function getAfastamentosActionPermissions(
     ),
   };
 }
+
+export function canAnalyzeAfastamento(status: AfastamentoStatus) {
+  return [
+    "encaminhado",
+    "aguardando_analise",
+    "em_analise",
+    "aguardando_avaliacao",
+  ].includes(status);
+}
+
+export function canIssueReturnAfastamento(status: AfastamentoStatus) {
+  return status === "aguardando_avaliacao";
+}
+
+export function canRegisterProvidenceAfastamento(status: AfastamentoStatus) {
+  return status === "avaliado" || status === "aguardando_rh";
+}
+
 export function today() {
   return new Date().toISOString().slice(0, 10);
 }

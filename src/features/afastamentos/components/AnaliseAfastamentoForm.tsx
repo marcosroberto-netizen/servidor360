@@ -11,7 +11,7 @@ import type {
   AnaliseAfastamentoFormProps,
   TriagemDecisao,
 } from "../types/afastamentos.types";
-import { MedicoSelectionDrawer } from "./MedicoSelectionDrawer";
+import { AvaliadorSelectionDrawer } from "./MedicoSelectionDrawer";
 
 const encaminhamentoOptions: Array<{
   value: TriagemDecisao;
@@ -80,24 +80,26 @@ const comentarioPadrao = {
 export function AnaliseAfastamentoForm({
   analise,
   proximaAcao,
-  medicos = [],
-  isLoadingMedicos = false,
-  medicoSelecionadoId,
-  medicoAtualId,
+  avaliadores = [],
+  isLoadingAvaliadores = false,
+  avaliadorSelecionadoId,
+  avaliadorAtualId,
   onAnaliseChange,
   onProximaAcaoChange,
-  onMedicoSelecionadoChange,
+  onAvaliadorSelecionadoChange,
   onSubmit,
 }: AnaliseAfastamentoFormProps) {
   const [isMedicoDrawerOpen, setIsMedicoDrawerOpen] = useState(false);
   const comentarioConfig = proximaAcao
     ? comentarioPorDecisao[proximaAcao]
     : comentarioPadrao;
-  const medicoSelecionado = medicos.find(
-    (medico) => medico.medicoId === medicoSelecionadoId,
+  const avaliadorSelecionado = avaliadores.find(
+    (avaliador) => avaliador.avaliadorId === avaliadorSelecionadoId,
   );
-  const medicoAtual = medicos.find((medico) => medico.medicoId === medicoAtualId);
-  const isReassignment = Boolean(medicoAtualId);
+  const avaliadorAtual = avaliadores.find(
+    (avaliador) => avaliador.avaliadorId === avaliadorAtualId,
+  );
+  const isReassignment = Boolean(avaliadorAtualId);
   const currentComentarioConfig = isReassignment
     ? {
         label: "Justificativa da reatribuição",
@@ -133,7 +135,7 @@ export function AnaliseAfastamentoForm({
               Responsável atual
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-950">
-              {medicoAtual?.nome ?? "Médico atualmente atribuído"}
+              {avaliadorAtual?.nome ?? "Profissional atualmente atribuído"}
             </p>
             <p className="mt-1 text-xs leading-5 text-slate-600">
               A atribuição atual será cancelada somente após a confirmação da transferência.
@@ -200,29 +202,29 @@ export function AnaliseAfastamentoForm({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-violet-100 text-violet-700">
-                  {medicoSelecionado ? (
+                  {avaliadorSelecionado ? (
                     <UserRoundCheck className="h-5 w-5" aria-hidden="true" />
                   ) : (
                     <Stethoscope className="h-5 w-5" aria-hidden="true" />
                   )}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
-                    Médico avaliador
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+                      Profissional avaliador
                   </p>
-                  {medicoSelecionado ? (
+                  {avaliadorSelecionado ? (
                     <>
                       <p className="mt-0.5 truncate text-sm font-semibold text-slate-950">
-                        {medicoSelecionado.nome}
+                        {avaliadorSelecionado.nome}
                       </p>
                       <p className="mt-0.5 text-xs text-slate-600">
-                        {medicoSelecionado.registroProfissional ?? "Registro não informado"}
-                        {` · ${medicoSelecionado.pacientesPendentes} na fila`}
+                        {avaliadorSelecionado.tipo} · {avaliadorSelecionado.registroProfissional ?? "Registro não informado"}
+                        {` · ${avaliadorSelecionado.pacientesPendentes} na fila`}
                       </p>
                     </>
                   ) : (
                     <p className="mt-0.5 text-sm font-medium text-violet-900">
-                      Selecione um médico para continuar.
+                      Selecione um profissional para continuar.
                     </p>
                   )}
                 </div>
@@ -235,7 +237,7 @@ export function AnaliseAfastamentoForm({
                 }}
                 className="h-9 rounded-md border border-violet-300 bg-white px-3 text-sm font-semibold text-violet-800 hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2"
               >
-                {medicoSelecionado ? "Alterar médico" : "Escolher médico"}
+                {avaliadorSelecionado ? "Alterar avaliador" : "Escolher avaliador"}
               </button>
             </div>
           </section>
@@ -267,14 +269,14 @@ export function AnaliseAfastamentoForm({
         </div>
       </div>
       {isMedicoDrawerOpen ? (
-        <MedicoSelectionDrawer
-          medicos={medicos}
-          selectedMedicoId={medicoSelecionadoId}
-          currentMedicoId={medicoAtualId}
-          isLoading={isLoadingMedicos}
+        <AvaliadorSelectionDrawer
+          avaliadores={avaliadores}
+          selectedAvaliadorId={avaliadorSelecionadoId}
+          currentAvaliadorId={avaliadorAtualId}
+          isLoading={isLoadingAvaliadores}
           onClose={() => setIsMedicoDrawerOpen(false)}
-          onConfirm={(medicoId) => {
-            onMedicoSelecionadoChange(medicoId);
+          onConfirm={(avaliadorId) => {
+            onAvaliadorSelecionadoChange(avaliadorId);
             setIsMedicoDrawerOpen(false);
           }}
         />
